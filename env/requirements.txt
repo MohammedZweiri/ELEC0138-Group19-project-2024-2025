@@ -1,0 +1,9 @@
+numpy
+pandas
+folktables
+tensorflow
+argparse
+keras
+scikit-learn
+matplotlib
+pydot
