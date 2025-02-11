@@ -7,3 +7,6 @@ keras
 scikit-learn
 matplotlib
 pydot
+flask
+mysql-connector-python
+flask_mysqldb
