@@ -169,6 +169,72 @@ def get_post():
     return jsonify(code=200, messages=rv)
 
 
+@app.route("/post/update", methods=["POST"])
+def edit_post():
+    """
+    edit post
+
+    method: POST
+    body: {"postID": int, "forumID": int, "postName": string, "postTime": string, "postText": string}
+    return: JSON
+    {
+        code: int,
+        messages: string
+    }
+
+    messages:
+        code 200: Post updated successfully
+        code 400: Invalid JSON format, PostID is required, ForumID is required, Postname is required
+                  PostTime is required, PostText is required, Postname is too long, PostTime is too long, PostText is too long
+        code 404: No such post
+        code 500: MySQL Error [error code]: error message
+    """
+    try:
+        data = request.get_json()
+    except:
+        raise InvalidAPIUsage("Invalid JSON format.", status_code=400)
+    postID = data.get("postID")
+    forumID = data.get("forumID")
+    postName = data.get("postName")
+    postTime = data.get("postTime")
+    postText = data.get("postText")
+    if not postID:
+        raise InvalidAPIUsage("PostID is required.", status_code=400)
+    if not forumID:
+        raise InvalidAPIUsage("ForumID is required.", status_code=400)
+    if not postName:
+        raise InvalidAPIUsage("Postname is required.", status_code=400)
+    elif len(postName) > 20:
+        raise InvalidAPIUsage("Postname is too long.", status_code=400)
+    if not postTime:
+        raise InvalidAPIUsage("PostTime is required.", status_code=400)
+    elif len(postTime) > 23:
+        raise InvalidAPIUsage("PostTime is too long.", status_code=400)
+    if not postText:
+        raise InvalidAPIUsage("PostText is required.", status_code=400)
+    elif len(postText) > 200:
+        raise InvalidAPIUsage("PostText is too long.", status_code=400)
+
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute(
+            "UPDATE Posts SET postName=%s, postTime=%s, postText=%s WHERE postID=%s AND forumID=%s",
+            (postName, postTime, postText, postID, forumID),
+        )
+        if cursor.rowcount == 0:
+            raise InvalidAPIUsage("No Changes.", status_code=404)
+    except mysql.connection.Error as e:
+        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        raise InvalidAPIUsage(
+            f"MySQL Error [{e.args[0]}]: {e.args[1]}", status_code=500
+        )
+    finally:
+        mysql.connection.commit()
+        cursor.close()
+
+    return jsonify(code=201, messages="Post updated successfully."), 201
+
+
 @app.route("/post/delete", methods=["POST"])
 def delete_post():
     """
