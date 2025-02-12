@@ -169,6 +169,59 @@ def get_post():
     return jsonify(code=200, messages=rv)
 
 
+@app.route("/post/delete", methods=["POST"])
+def delete_post():
+    """
+    delete post
+
+    method: POST
+    body: {"postID": int, "forumID": int, "postName": string}
+    return: JSON
+    {
+        code: int,
+        messages: string
+    }
+
+    messages:
+        code 226: Post deleted successfully
+        code 400: Invalid JSON format, PostID is required, ForumID is required, PostName is required
+        code 404: No such post
+        code 500: MySQL Error [error code]: error message
+    """
+    try:
+        data = request.get_json()
+    except:
+        raise InvalidAPIUsage("Invalid JSON format.", status_code=400)
+    postID = data.get("postID")
+    forumID = data.get("forumID")
+    postName = data.get("postName")
+    if not postID:
+        raise InvalidAPIUsage("PostID is required.", status_code=400)
+    if not forumID:
+        raise InvalidAPIUsage("ForumID is required.", status_code=400)
+    if not postName:
+        raise InvalidAPIUsage("PostName is required.", status_code=400)
+
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute(
+            "DELETE FROM Posts WHERE postID=%s AND forumID=%s AND postName=%s",
+            (postID, forumID, postName),
+        )
+        if cursor.rowcount == 0:
+            raise InvalidAPIUsage("No such post.", status_code=404)
+    except mysql.connection.Error as e:
+        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        raise InvalidAPIUsage(
+            f"MySQL Error [{e.args[0]}]: {e.args[1]}", status_code=500
+        )
+    finally:
+        mysql.connection.commit()
+        cursor.close()
+
+    return jsonify(code=226, messages="Post deleted successfully."), 226
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80, debug=True)
     # app.run(host="127.0.0.1", port=80, debug=True)
