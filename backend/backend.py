@@ -1,10 +1,90 @@
 from flask import Flask, jsonify, request
+from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
-@app.route('/hello')
-def hello_world():
-    return jsonify(message="Welcome to the forum")
+
+app.config["MYSQL_HOST"] = "47.122.18.213"
+app.config["MYSQL_USER"] = "user"
+app.config["MYSQL_PASSWORD"] = "3aRtVyBN17dUbCq9"
+app.config["MYSQL_DB"] = "ELEC0138"
+app.config["MYSQL_CURSORCLASS"] = "DictCursor"
+
+mysql = MySQL(app)
+
+
+class InvalidAPIUsage(Exception):
+    status_code = 400
+
+    def __init__(self, message, status_code=None, payload=None):
+        super().__init__()
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv["code"] = self.status_code
+        rv["messages"] = self.message
+        return rv
+
+
+@app.errorhandler(InvalidAPIUsage)
+def invalid_api_usage(e):
+    return jsonify(e.to_dict()), e.status_code
+
+
+@app.route("/user/login", methods=["POST"])
+def user_login():
+    """
+    user login
+
+    method: POST
+    body: {"username": string, "password": string}
+    return: JSON
+    {
+        code: int,
+        messages: string or list of dictionary
+    }
+
+    messages:
+        code 200: [{"userID": int, "username": string, "role": string}]
+        code 400: Invalid JSON format, Username is required, Password is required
+        code 403: Password is incorrect
+        code 404: No such user
+    """
+    try:
+        data = request.get_json()
+    except:
+        raise InvalidAPIUsage("Invalid JSON format.", status_code=400)
+    username = data.get("username")
+    password = data.get("password")
+    if not username:
+        raise InvalidAPIUsage("Username is required.", status_code=400)
+    if not password:
+        raise InvalidAPIUsage("Password is required.", status_code=400)
+
+    # Creating a connection cursor
+    cursor = mysql.connection.cursor()
+    cursor.execute(
+        "SELECT userID, username, role FROM Users WHERE username=%s AND password=%s",
+        (username, password),
+    )
+    rv = cursor.fetchall()
+    if len(rv) == 0:
+        cursor.execute(
+            "SELECT userID, username, role FROM Users WHERE username=%s", (username,)
+        )
+        rv = cursor.fetchall()
+        if len(rv) == 0:
+            raise InvalidAPIUsage("No such user.", status_code=404)
+        else:
+            raise InvalidAPIUsage("Password is incorrect.", status_code=403)
+    cursor.close()
+    return jsonify(code=200, messages=rv)
+
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host="0.0.0.0", port=80, debug=True)
+    # app.run(host="127.0.0.1", port=80, debug=True)
