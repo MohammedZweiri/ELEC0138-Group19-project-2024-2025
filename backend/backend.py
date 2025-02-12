@@ -85,6 +85,70 @@ def user_login():
     return jsonify(code=200, messages=rv)
 
 
+@app.route("/post/send", methods=["POST"])
+def insert_post():
+    """
+    insert post
+
+    method: POST
+    body: {"forumID": int, "postID": int, "postName": string, "postTime": string, "postText": string}
+    return: JSON
+    {
+        code: int,
+        messages: string or list of dictionary
+    }
+
+    messages:
+        code 201: Post inserted successfully
+        code 400: Invalid JSON format, ForumID is required, Username is required, PostTime is required, PostText is required
+                  username is too long, postTime is too long, postText is too long
+        code 500: MySQL Error [error code]: error message
+    """
+
+    try:
+        data = request.get_json()
+    except:
+        raise InvalidAPIUsage("Invalid JSON format.", status_code=400)
+
+    forumID = data.get("forumID")
+    postID = data.get("postID")
+    username = data.get("postName")
+    postTime = data.get("postTime")
+    postText = data.get("postText")
+
+    if not forumID:
+        raise InvalidAPIUsage("ForumID is required.", status_code=400)
+    if not username:
+        raise InvalidAPIUsage("Username is required.", status_code=400)
+    elif len(username) > 20:
+        raise InvalidAPIUsage("Username is too long.", status_code=400)
+    if not postTime:
+        raise InvalidAPIUsage("PostTime is required.", status_code=400)
+    elif len(postTime) > 23:
+        raise InvalidAPIUsage("PostTime is too long.", status_code=400)
+    if not postText:
+        raise InvalidAPIUsage("PostText is required.", status_code=400)
+    elif len(postText) > 200:
+        raise InvalidAPIUsage("PostText is too long.", status_code=400)
+
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO Posts (forumID, postName, postTime, postText) VALUES (%s, %s, %s, %s)",
+            (forumID, username, postTime, postText),
+        )
+    except mysql.connection.Error as e:
+        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        raise InvalidAPIUsage(
+            f"MySQL Error [{e.args[0]}]: {e.args[1]}", status_code=500
+        )
+    finally:
+        mysql.connection.commit()
+        cursor.close()
+
+    return jsonify(code=201, messages="Post inserted successfully."), 201
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80, debug=True)
     # app.run(host="127.0.0.1", port=80, debug=True)
