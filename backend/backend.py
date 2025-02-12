@@ -149,6 +149,26 @@ def insert_post():
     return jsonify(code=201, messages="Post inserted successfully."), 201
 
 
+@app.route("/post/get", methods=["GET"])
+def get_post():
+    """
+    get post
+
+    method: GET
+    return: JSON
+    {
+        code: int,
+        messages: list of dictionary
+    }
+    """
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM Posts")
+    rv = cursor.fetchall()
+    cursor.close()
+    return jsonify(code=200, messages=rv)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80, debug=True)
     # app.run(host="127.0.0.1", port=80, debug=True)
