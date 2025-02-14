@@ -39,7 +39,7 @@
         username: "",
         email: "",
         password: "",
-        isRegistering: false // Toggles between login and register forms
+        isRegistering: false
       };
     },
     methods: {
@@ -49,10 +49,13 @@
           return;
         }
   
-        const loginData = { username: this.username, password: this.password };
+        const loginData = {
+          username: this.username,
+          password: this.password
+        };
   
         try {
-          const response = await fetch("http://localhost:2500/login", {
+          const response = await fetch("http://154.201.83.152:8081/user/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(loginData)
@@ -65,8 +68,11 @@
           const result = await response.json();
           console.log("Login successful:", result);
   
-          alert("Login successful!");
-          window.location.reload();
+          // Store authentication token
+          localStorage.setItem("userToken", result.token);
+  
+          //alert("Login successful!");
+          this.$router.push("/forum"); // Redirect to Forum Page
         } catch (error) {
           console.error("Login error:", error);
           alert("Login failed. Please check your credentials.");
@@ -79,7 +85,11 @@
           return;
         }
   
-        const newUser = { username: this.username, email: this.email, password: this.password };
+        const newUser = {
+          username: this.username,
+          email: this.email,
+          password: this.password
+        };
   
         try {
           const response = await fetch("http://localhost:2500/user/send", {
@@ -95,7 +105,7 @@
           console.log("Registration successful:", await response.json());
   
           alert("Account created successfully! Please log in.");
-          this.toggleForm(); // Switch back to login form after registration
+          this.toggleForm(); // Switch to login form after registration
         } catch (error) {
           console.error("Registration error:", error);
           alert("Failed to register. Try again later.");

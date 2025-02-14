@@ -2,13 +2,7 @@
     <div>
       <header>
         <h1>My Forum</h1>
-        <nav>
-          <ul>
-            <li><a href="#general">General</a></li>
-            <li><a href="#news">News</a></li>
-            <li><a href="#support">Support</a></li>
-          </ul>
-        </nav>
+        <button class="logout-btn" @click="logout">Logout</button>
       </header>
       <main>
         <section id="threads">
@@ -67,6 +61,7 @@
     },
     mounted() {
       console.log('Component mounted, fetching posts');
+      this.checkAuth();
       this.fetchPosts(); // Call the method to fetch posts when the component is mounted
     },
     methods: {
@@ -186,7 +181,20 @@
     
       window.location.reload()
     },
-      async deleteThread(index) {
+
+    logout() {
+      localStorage.removeItem("userToken"); // Remove authentication token
+      this.$router.push("/"); // Redirect to login page
+    },
+
+    checkAuth() {
+      const isAuthenticated = localStorage.getItem("userToken");
+      if (!isAuthenticated) {
+        this.$router.push("/"); // Redirect to login if not authenticated
+      }
+    },
+
+    async deleteThread(index) {
         let formattedPost = null;
         formattedPost = {
               forumID: 1,
