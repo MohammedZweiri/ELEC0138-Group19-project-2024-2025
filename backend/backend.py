@@ -85,6 +85,47 @@ def user_login():
     return jsonify(code=200, messages=rv)
 
 
+@app.route("/user/register", methods=["POST"])
+def user_register():
+    """
+    user register
+
+    method: POST
+    """
+    try:
+        data = request.get_json()
+    except:
+        raise InvalidAPIUsage("Invalid JSON format.", status_code=400)
+    username = data.get("username")
+    password = data.get("password")
+    if not username:
+        raise InvalidAPIUsage("Username is required.", status_code=400)
+    if not password:
+        raise InvalidAPIUsage("Password is required.", status_code=400)
+    if len(username) > 20:
+        raise InvalidAPIUsage("Username is too long.", status_code=400)
+    if len(password) > 50:
+        raise InvalidAPIUsage("Password is too long.", status_code=400)
+
+    cursor = mysql.connection.cursor()
+
+    try:
+        cursor.execute(
+            "INSERT INTO Users (username, password) VALUES (%s, %s)",
+            (username, password),
+        )
+    except mysql.connection.Error as e:
+        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        raise InvalidAPIUsage(
+            f"MySQL Error [{e.args[0]}]: {e.args[1]}", status_code=500
+        )
+    finally:
+        mysql.connection.commit()
+        cursor.close()
+
+    return jsonify(code=201, messages="User registered successfully."), 201
+
+
 @app.route("/post/send", methods=["POST"])
 def insert_post():
     """
