@@ -1,11 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
-from flask_cors import CORS
 
 app = Flask(__name__)
-
-# Enable CORs for all routes
-CORS(app)
 
 
 app.config["MYSQL_HOST"] = "47.122.18.213"
@@ -71,10 +67,37 @@ def user_login():
 
     # Creating a connection cursor
     cursor = mysql.connection.cursor()
-    cursor.execute(
-        "SELECT userID, username, role FROM Users WHERE username=%s AND password=%s",
-        (username, password),
+
+    # safe implementation to prevent SQL injection
+    # cursor.execute(
+    #     "SELECT userID, username, role FROM Users WHERE username=%s AND password=%s",
+    #     (username, password),
+    # )
+    # print("********")
+    # print(
+    #     f"SELECT userID, username, role FROM Users WHERE username=%s AND password=%s",
+    #     (username, password),
+    # )
+    # print("********")
+
+    # not safe implementation
+    query = (
+        "SELECT * FROM Users WHERE username='"
+        + username
+        + "' AND password='"
+        + password
+        + "';"
     )
+    """
+    Request body in JSON format:
+    {
+        "username": "anything' OR '1'='1",
+        "password": "anything' OR '1'='1"
+    }
+
+    SELECT * FROM Users WHERE username='anything' OR '1'='1' AND password='anything' OR '1'='1';
+    """
+    cursor.execute(query)
     rv = cursor.fetchall()
     if len(rv) == 0:
         cursor.execute(
