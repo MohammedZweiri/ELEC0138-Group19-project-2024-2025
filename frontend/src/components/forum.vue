@@ -249,6 +249,8 @@
     padding: 0;
   }
   header {
+    position: relative;
+    left: 300px;
     background-color: #333;
     color: #fff;
     padding: 1em 0;
@@ -270,6 +272,8 @@
     font-weight: bold;
   }
   main {
+    position: relative;
+    left: 300px;
     padding: 20px;
     max-width: 800px;
     margin: 20px auto;
@@ -319,6 +323,8 @@
     background-color: #555;
   }
   footer {
+    position: relative;
+    left: 300px;
     background-color: #333;
     color: #fff;
     text-align: center;

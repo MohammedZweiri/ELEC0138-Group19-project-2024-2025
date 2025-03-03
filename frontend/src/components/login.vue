@@ -92,7 +92,7 @@
         };
   
         try {
-          const response = await fetch("http://localhost:2500/user/send", {
+          const response = await fetch("http://154.201.83.152:8081/user/regsiter", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newUser)
@@ -140,6 +140,8 @@
   }
   
   .login-container {
+    position: relative;
+    left: 150px; /* Moves it 50px to the right */
     background-color: #fff;
     padding: 2rem;
     border-radius: 8px;
