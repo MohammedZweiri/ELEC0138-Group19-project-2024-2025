@@ -3,6 +3,11 @@ from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
+from flask_cors import CORS
+
+# Enable CORs for all routes
+CORS(app)
+
 
 app.config["MYSQL_HOST"] = "47.122.18.213"
 app.config["MYSQL_USER"] = "user"
