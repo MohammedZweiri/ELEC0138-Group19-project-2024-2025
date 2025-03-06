@@ -125,21 +125,26 @@ def user_register():
         raise InvalidAPIUsage("Invalid JSON format.", status_code=400)
     username = data.get("username")
     password = data.get("password")
+    email = data.get("email")
     if not username:
         raise InvalidAPIUsage("Username is required.", status_code=400)
     if not password:
         raise InvalidAPIUsage("Password is required.", status_code=400)
+    if not email:
+        raise InvalidAPIUsage("Email is required.", status_code=400)
     if len(username) > 20:
         raise InvalidAPIUsage("Username is too long.", status_code=400)
     if len(password) > 50:
         raise InvalidAPIUsage("Password is too long.", status_code=400)
+    if len(email) > 50:
+        raise InvalidAPIUsage("Email is too long.", status_code=400)
 
     cursor = mysql.connection.cursor()
 
     try:
         cursor.execute(
-            "INSERT INTO Users (username, password) VALUES (%s, %s)",
-            (username, password),
+            "INSERT INTO Users (username, password, email) VALUES (%s, %s, %s)",
+            (username, password, email),
         )
     except mysql.connection.Error as e:
         print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
@@ -231,7 +236,9 @@ def get_post():
     """
 
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT * FROM Posts")
+    cursor.execute(
+        "SELECT postID, forumID, postName, postTime, postText, email FROM Posts, Users WHERE postName=username"
+    )
     rv = cursor.fetchall()
     cursor.close()
     return jsonify(code=200, messages=rv)
