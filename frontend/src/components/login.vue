@@ -26,6 +26,7 @@
       <p v-if="!isRegistering"><a href="#">Forgot Password?</a></p>
       <p>
         {{ isRegistering ? "Already have an account?" : "Don't have an account?" }}
+        <br>
         <a href="#" @click="toggleForm">{{ isRegistering ? "Login here" : "Register here" }}</a>
       </p>
     </div>
@@ -123,25 +124,20 @@ export default {
 </script>
 
 <style scoped>
-/* Basic reset */
-* {
+/* Global reset */
+html,
+body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f2f2f2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
 }
 
 .login-container {
-  position: relative;
-  left: 150px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background-color: #fff;
   padding: 2rem;
   border-radius: 8px;
