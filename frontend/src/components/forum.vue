@@ -65,9 +65,9 @@ export default {
     this.fetchPosts(); // Call the method to fetch posts when the component is mounted
   },
   methods: {
-
     fetchPosts() {
-      fetch('http://154.201.83.152:8081/post/get')
+      const baseUrl = import.meta.env.VITE_BASE_URL;
+      fetch(`${baseUrl}/post/get`)
         .then(response => response.json())
         .then(data => {
           if (data.code === 200 && data.messages) {
@@ -106,8 +106,8 @@ export default {
               postTime: new Date().toISOString().split("T")[0],
               postText: this.newThread.content
             }
-
-            const response = await fetch("http://154.201.83.152:8081/post/update", {
+            const baseUrl = import.meta.env.VITE_BASE_URL;
+            const response = await fetch(`${baseUrl}/post/update`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -155,7 +155,8 @@ export default {
 
 
           try {
-            const response = await fetch("http://154.201.83.152:8081/post/send", {
+            const baseUrl = import.meta.env.VITE_BASE_URL;
+            const response = await fetch(`${baseUrl}/post/send`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -203,7 +204,8 @@ export default {
         postName: this.threads[index].author
       }
       try {
-        const response = await fetch("http://154.201.83.152:8081/post/delete", {
+        const baseUrl = import.meta.env.VITE_BASE_URL;
+        const response = await fetch(`${baseUrl}/post/delete`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

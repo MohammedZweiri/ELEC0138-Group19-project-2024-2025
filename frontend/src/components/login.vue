@@ -56,7 +56,8 @@ export default {
       };
 
       try {
-        const response = await fetch("http://154.201.83.152:8081/user/login", {
+        const baseUrl = import.meta.env.VITE_BASE_URL
+        const response = await fetch(`${baseUrl}/user/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(loginData)
@@ -93,7 +94,8 @@ export default {
       };
 
       try {
-        const response = await fetch("http://154.201.83.152:8081/user/register", {
+        const baseUrl = import.meta.env.VITE_BASE_URL
+        const response = await fetch(`${baseUrl}/user/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newUser)
