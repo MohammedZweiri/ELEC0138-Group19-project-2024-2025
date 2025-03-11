@@ -6,6 +6,7 @@ from flask.views import MethodView
 from flask_cors import CORS
 from flask_mysqldb import MySQL
 from flask_smorest import Api, Blueprint, abort
+from flask_smorest.error_handler import ErrorSchema
 from marshmallow import validate
 
 warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name ")
@@ -60,6 +61,7 @@ posts_bp = Blueprint('post', __name__, url_prefix='/api/post')
 class Users(MethodView):
     @users_bp.arguments(UserSchema, location='json')
     @users_bp.response(201, UserSchema)
+    @users_bp.alt_response(409, schema=ErrorSchema)
     def post(self, args):
         """Create a new user"""
         email, password, name = args['email'], args['password'], args['username']
@@ -91,6 +93,8 @@ class Users(MethodView):
 class UsersLogin(MethodView):
     @users_bp.arguments(UserSchema(only=("username", "password")), location='json')
     @users_bp.response(200, UserSchema)
+    @users_bp.alt_response(404, schema=ErrorSchema)
+    @users_bp.alt_response(401, schema=ErrorSchema)
     def post(self, args):
         """Login"""
         username, password = args['username'], args['password']
