@@ -10,8 +10,7 @@
           <h2>{{ thread.title }}</h2>
           <div class="thread-meta">Posted by {{ thread.author }} on {{ thread.date }}</div>
           <p>{{ thread.content }}</p>
-          <div v-if="!thread.protected">
-            <button @click="replyToThread(thread.id)">Reply</button>
+          <div v-if="!thread.protected && thread.author == currentUser">
             <button @click="editThread(index)">Edit</button>
             <button @click="deleteThread(index)">Delete</button>
           </div>
@@ -56,7 +55,8 @@ export default {
         content: ''
       },
       isEditing: false,
-      editIndex: null
+      editIndex: null,
+      currentUser: localStorage.getItem("currentUser") || "", // Retrieve logged-in user
     };
   },
   mounted() {
@@ -217,10 +217,6 @@ export default {
       this.isEditing = true;
       this.editIndex = index;
     },
-
-    replyToThread(threadId) {
-      alert(`Replying to thread ID: ${threadId}`);
-    }
   }
 }
 </script>

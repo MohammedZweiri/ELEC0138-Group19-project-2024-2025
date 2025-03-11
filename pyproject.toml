@@ -7,10 +7,13 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<4.0"
 dependencies = [
     "flask (>=3.1.0,<4.0.0)",
-    "flask-mysqldb (>=2.0.0,<3.0.0)"
+    "flask-mysqldb (>=2.0.0,<3.0.0)",
+    "flask-cors (>=5.0.1,<6.0.0)",
+    "waitress (>=3.0.2,<4.0.0)",
+    "types-waitress (>=3.0.1.20241117,<4.0.0.0)"
 ]
 
 
