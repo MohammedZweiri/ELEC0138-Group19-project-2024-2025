@@ -82,12 +82,9 @@ class Users(MethodView):
             )
             mysql.connection.commit()
 
-            # Get the new user's info
-            cursor.execute("SELECT * FROM Users WHERE email = %s", (email,))
-            if not (new_user := cursor.fetchone()):
-                abort(500)
-
-        return new_user
+            # Return the new user
+            cursor.execute("SELECT * FROM Users WHERE username = %s", (name,))
+            return cursor.fetchone()
 
 
 @users_bp.route('/login', endpoint='login')
