@@ -57,7 +57,7 @@ users_bp = Blueprint('user', __name__, url_prefix='/api/user')
 posts_bp = Blueprint('post', __name__, url_prefix='/api/post')
 
 
-@users_bp.route('', endpoint='index')
+@users_bp.route('register', endpoint='register')
 class Users(MethodView):
     @users_bp.arguments(UserSchema, location='json')
     @users_bp.response(201, UserSchema)
