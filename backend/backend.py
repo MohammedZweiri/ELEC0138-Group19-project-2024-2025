@@ -14,19 +14,19 @@ warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name
 
 class UserSchema(ma.Schema):
     username = ma.fields.String(required=True, validate=validate.Length(max=20))
-    email = ma.fields.Email(required=True)
+    email = ma.fields.Email(required=True, validate=validate.Length(max=50))
 
     uid = ma.fields.Integer(dump_only=True, attribute="userID", )
     role = ma.fields.String(dump_only=True)
 
-    password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=8, max=36))
+    password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
 
 
 class PostSchema(ma.Schema):
     post_id = ma.fields.Integer(required=True, attribute="postID")
     forum_id = ma.fields.Integer(required=True, attribute="forumID")
     username = ma.fields.String(required=True, attribute="postName", validate=validate.Length(max=20))
-    time = ma.fields.String(required=True, attribute="postTime", validate=validate.Length(max=20))
+    time = ma.fields.String(required=True, attribute="postTime", validate=validate.Length(max=23))
     text = ma.fields.String(required=True, attribute="postText", validate=validate.Length(max=200))
 
 
