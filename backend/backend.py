@@ -137,29 +137,29 @@ class Posts(MethodView):
             )
             mysql.connection.commit()
 
-    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "text")), location='json')
+    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username", "text")), location='json')
     @posts_bp.response(204)
     def put(self, args):
         """Update a post"""
-        fid, pid, text = args['forumID'], args['postID'], args['postText']
+        fid, pid, name, text = args['forumID'], args['postID'], args['postName'], args['postText']
 
         with mysql.connection.cursor() as cursor:
             cursor.execute(
-                "UPDATE Posts SET postText = %s WHERE forumID = %s AND postID = %s",
-                (text, fid, pid)
+                "UPDATE Posts SET postText = %s WHERE forumID = %s AND postID = %s AND postName = %s",
+                (text, fid, pid, name)
             )
             mysql.connection.commit()
 
-    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id")), location='json')
+    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username")), location='json')
     @posts_bp.response(204)
     def delete(self, args):
         """Delete a post"""
-        fid, pid = args['forumID'], args['postID']
+        fid, pid, name = args['forumID'], args['postID'], args['postName']
 
         with mysql.connection.cursor() as cursor:
             cursor.execute(
-                "DELETE FROM Posts WHERE forumID = %s AND postID = %s",
-                (fid, pid)
+                "DELETE FROM Posts WHERE forumID = %s AND postID = %s AND postName = %s",
+                (fid, pid, name)
             )
             mysql.connection.commit()
 
