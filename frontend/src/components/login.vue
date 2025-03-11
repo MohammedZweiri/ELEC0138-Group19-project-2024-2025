@@ -72,6 +72,7 @@ export default {
 
         // Store authentication token
         localStorage.setItem("userToken", result.token);
+        localStorage.setItem("currentUser", this.username);
 
         //alert("Login successful!");
         this.$router.push("/forum"); // Redirect to Forum Page
