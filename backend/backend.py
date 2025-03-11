@@ -136,8 +136,6 @@ class Posts(MethodView):
             )
             mysql.connection.commit()
 
-        return
-
     @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "text")), location='json')
     @posts_bp.response(204)
     def put(self, args):
@@ -151,8 +149,6 @@ class Posts(MethodView):
             )
             mysql.connection.commit()
 
-        return
-
     @posts_bp.arguments(PostSchema(only=("forum_id", "post_id")), location='json')
     @posts_bp.response(204)
     def delete(self, args):
@@ -165,8 +161,6 @@ class Posts(MethodView):
                 (fid, pid)
             )
             mysql.connection.commit()
-
-        return
 
 
 api.register_blueprint(users_bp)
