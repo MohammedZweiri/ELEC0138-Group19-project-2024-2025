@@ -321,8 +321,9 @@ def edit_post():
     cursor = mysql.connection.cursor()
     try:
         cursor.execute(
-            "UPDATE Posts SET postName=%s, postTime=%s, postText=%s WHERE postID=%s AND forumID=%s",
-            (post_name, post_time, post_text, post_id, forum_id),
+            "UPDATE Posts SET postTime=%s, postText=%s "
+            "WHERE postName=%s AND postID=%s AND forumID=%s",
+            (post_time, post_text, post_name, post_id, forum_id),
         )
         if cursor.rowcount == 0:
             raise InvalidAPIUsage("No Changes.", status_code=404)
