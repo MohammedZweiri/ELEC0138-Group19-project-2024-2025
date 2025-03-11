@@ -1,394 +1,172 @@
-"""
-This file is the backend of the project. It is responsible for handling
-the requests from the frontend and interacting with the database. It is
-written in Python and uses Flask as the web framework.
-"""
+import warnings
 
-from flask import Flask, jsonify, request
+import marshmallow as ma
+from flask import Flask
+from flask.views import MethodView
 from flask_cors import CORS
 from flask_mysqldb import MySQL
+from flask_smorest import Api, Blueprint, abort
+from flask_smorest.error_handler import ErrorSchema
+from marshmallow import validate
 
-# from waitress import serve
+warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name ")
+
+
+class UserSchema(ma.Schema):
+    username = ma.fields.String(required=True, validate=validate.Length(max=20))
+    email = ma.fields.Email(required=True, validate=validate.Length(max=50))
+
+    uid = ma.fields.Integer(dump_only=True, attribute="userID", )
+    role = ma.fields.String(dump_only=True)
+
+    password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
+
+
+class PostSchema(ma.Schema):
+    post_id = ma.fields.Integer(required=True, attribute="postID")
+    forum_id = ma.fields.Integer(required=True, attribute="forumID")
+    username = ma.fields.String(required=True, attribute="postName", validate=validate.Length(max=20))
+    time = ma.fields.String(required=True, attribute="postTime", validate=validate.Length(max=23))
+    text = ma.fields.String(required=True, attribute="postText", validate=validate.Length(max=200))
+
 
 app = Flask(__name__)
 
-# Enable CORs for all routes
-CORS(app)
+app.config["API_TITLE"] = "ELEC0138 Forum API"
+app.config["API_VERSION"] = "0.1.0"
 
+# flask-smorest
+app.config["OPENAPI_VERSION"] = "3.1.0"
+app.config["OPENAPI_JSON_PATH"] = "api-spec.json"
+app.config["OPENAPI_URL_PREFIX"] = "/api/docs"
+app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
+app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
+# flask-mysql
 app.config["MYSQL_HOST"] = "47.122.18.213"
 app.config["MYSQL_USER"] = "user"
 app.config["MYSQL_PASSWORD"] = "3aRtVyBN17dUbCq9"
 app.config["MYSQL_DB"] = "ELEC0138"
 app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 
+CORS(app)
+api = Api(app)
 mysql = MySQL(app)
 
-
-class InvalidAPIUsage(Exception):
-    """Custom exception for API errors"""
-
-    status_code = 400
-
-    def __init__(self, message, status_code=None, payload=None):
-        super().__init__()
-        self.message = message
-        if status_code is not None:
-            self.status_code = status_code
-        self.payload = payload
-
-    def to_dict(self):
-        """Convert exception to dictionary"""
-        response_dict = dict(self.payload or ())
-        response_dict["code"] = self.status_code
-        response_dict["messages"] = self.message
-        return response_dict
+users_bp = Blueprint('user', __name__, url_prefix='/api/user')
+posts_bp = Blueprint('post', __name__, url_prefix='/api/post')
 
 
-@app.errorhandler(InvalidAPIUsage)
-def invalid_api_usage(exception):
-    """Error handler for InvalidAPIUsage"""
-    return jsonify(exception.to_dict()), exception.status_code
+@users_bp.route('register', endpoint='register')
+class Users(MethodView):
+    @users_bp.arguments(UserSchema, location='json')
+    @users_bp.response(201, UserSchema)
+    @users_bp.alt_response(409, schema=ErrorSchema)
+    def post(self, args):
+        """Create a new user"""
+        email, password, name = args['email'], args['password'], args['username']
+
+        with mysql.connection.cursor() as cursor:
+            # Check if user's email already exists
+            cursor.execute("SELECT 1 FROM Users WHERE email = %s", (email,))
+            if cursor.fetchone():
+                abort(409, message='Email already exists')
+
+            # Check if user's username already exists
+            cursor.execute("SELECT 1 FROM Users WHERE username = %s", (name,))
+            if cursor.fetchone():
+                abort(409, message='Username already exists')
+
+            # Insert the new user
+            cursor.execute(
+                "INSERT INTO Users (email, password, username) VALUES (%s, %s, %s)",
+                (email, password, name)
+            )
+            mysql.connection.commit()
+
+            # Return the new user
+            cursor.execute("SELECT * FROM Users WHERE username = %s", (name,))
+            return cursor.fetchone()
 
 
-def get_request_data():
-    """Retrieve JSON data from the request."""
-    try:
-        data = request.get_json()
-    except Exception as exc:
-        raise InvalidAPIUsage("Invalid JSON format.", status_code=400) from exc
-    if data is None:
-        raise InvalidAPIUsage("JSON body is missing.", status_code=400)
-    return data
+@users_bp.route('/login', endpoint='login')
+class UsersLogin(MethodView):
+    @users_bp.arguments(UserSchema(only=("username", "password")), location='json')
+    @users_bp.response(200, UserSchema)
+    @users_bp.alt_response(404, schema=ErrorSchema)
+    @users_bp.alt_response(401, schema=ErrorSchema)
+    def post(self, args):
+        """Login"""
+        username, password = args['username'], args['password']
+
+        with mysql.connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM Users WHERE username = %s", (username,))
+
+            if not (user := cursor.fetchone()):
+                abort(404, message='User not found')
+
+            if user['password'] != password:
+                abort(401, message='Incorrect password')
+
+        return user
 
 
-def validate_field(data, key, friendly_name=None, max_length=None):
-    """
-    Validate that a field exists and does not exceed an optional maximum length.
+@posts_bp.route('', endpoint='index')
+class Posts(MethodView):
+    @posts_bp.response(200, PostSchema(many=True))
+    def get(self):
+        """Get all posts"""
+        with mysql.connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT P.postID, P.forumID, P.postName, P.postTime, P.postText, U.email "
+                "FROM Posts P "
+                "INNER JOIN Users U ON P.postName = U.username"
+            )
+            return list(cursor.fetchall())
 
-    Parameters:
-        data (dict): The JSON payload.
-        key (str): The key to validate.
-        friendly_name (str, optional): A user-friendly name for error messages.
-        max_length (int, optional): The maximum allowed length.
+    @posts_bp.arguments(PostSchema(only=("forum_id", "username", "time", "text")), location='json')
+    @posts_bp.response(201)
+    def post(self, args):
+        """Create a new post"""
+        fid, name, time, text = args['forumID'], args['postName'], args['postTime'], args['postText']
 
-    Returns:
-        The value of the field if valid.
+        with mysql.connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO Posts (forumID, postName, postTime, postText) VALUES (%s, %s, %s, %s)",
+                (fid, name, time, text)
+            )
+            mysql.connection.commit()
 
-    Raises:
-        InvalidAPIUsage: If the field is missing or too long.
-    """
-    friendly_name = friendly_name or key
-    value = data.get(key)
-    if not value:
-        raise InvalidAPIUsage(f"{friendly_name} is required.", status_code=400)
-    if max_length is not None and len(value) > max_length:
-        raise InvalidAPIUsage(f"{friendly_name} is too long.", status_code=400)
-    return value
+    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username", "text")), location='json')
+    @posts_bp.response(204)
+    def put(self, args):
+        """Update a post"""
+        fid, pid, name, text = args['forumID'], args['postID'], args['postName'], args['postText']
 
+        with mysql.connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE Posts SET postText = %s WHERE forumID = %s AND postID = %s AND postName = %s",
+                (text, fid, pid, name)
+            )
+            mysql.connection.commit()
 
-@app.route("/user/login", methods=["POST"])
-def user_login():
-    """
-    user login
+    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username")), location='json')
+    @posts_bp.response(204)
+    def delete(self, args):
+        """Delete a post"""
+        fid, pid, name = args['forumID'], args['postID'], args['postName']
 
-    method: POST
-    body: {"username": string, "password": string}
-    return: JSON
-    {
-        code: int,
-        messages: string or list of dictionary
-    }
-
-    messages:
-        code 200: [{"userID": int, "username": string, "role": string}]
-        code 400: Invalid JSON format, Username is required, Password is required
-        code 403: Password is incorrect
-        code 404: No such user
-    """
-    # Retrieve and validate JSON data from the request
-    data = get_request_data()
-
-    # Validate required fields and enforce maximum lengths where needed
-    username = validate_field(data, "username", "username", max_length=20)
-    password = validate_field(data, "password", "password", max_length=50)
-
-    # Creating a connection cursor
-    cursor = mysql.connection.cursor()
-
-    # safe implementation to prevent SQL injection
-    # cursor.execute(
-    #     "SELECT userID, username, role FROM Users WHERE username=%s AND password=%s",
-    #     (username, password),
-    # )
-    # print("********")
-    # print(
-    #     f"SELECT userID, username, role FROM Users WHERE username=%s AND password=%s",
-    #     (username, password),
-    # )
-    # print("********")
-
-    # not safe implementation
-    query = (
-        "SELECT * FROM Users WHERE username='"
-        + username
-        + "' AND password='"
-        + password
-        + "';"
-    )
-
-    # Request body in JSON format:
-    # {
-    #     "username": "anything' OR '1'='1",
-    #     "password": "anything' OR '1'='1"
-    # }
-
-    # SELECT * FROM Users WHERE username='anything' OR '1'='1'
-    # AND password='anything' OR '1'='1';
-
-    cursor.execute(query)
-    messages = cursor.fetchall()
-    if len(messages) == 0:
-        cursor.execute(
-            "SELECT userID, username, role FROM Users WHERE username=%s", (username,)
-        )
-        messages = cursor.fetchall()
-        if len(messages) == 0:
-            raise InvalidAPIUsage("No such user.", status_code=404)
-        if len(messages) >= 1:
-            raise InvalidAPIUsage("Password is incorrect.", status_code=403)
-    cursor.close()
-    return jsonify(code=200, messages=messages)
+        with mysql.connection.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM Posts WHERE forumID = %s AND postID = %s AND postName = %s",
+                (fid, pid, name)
+            )
+            mysql.connection.commit()
 
 
-@app.route("/user/register", methods=["POST"])
-def user_register():
-    """
-    user register
+api.register_blueprint(users_bp)
+api.register_blueprint(posts_bp)
 
-    method: POST
-    """
-
-    # Retrieve and validate JSON data from the request
-    data = get_request_data()
-
-    # Validate required fields and enforce maximum lengths where needed
-    username = validate_field(data, "username", "username", max_length=20)
-    password = validate_field(data, "password", "password", max_length=50)
-    email = validate_field(data, "email", "email", max_length=50)
-
-    cursor = mysql.connection.cursor()
-
-    try:
-        cursor.execute(
-            "INSERT INTO Users (username, password, email) VALUES (%s, %s, %s)",
-            (username, password, email),
-        )
-    except mysql.connection.Error as mysql_error:
-        print(f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}")
-        raise InvalidAPIUsage(
-            f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}",
-            status_code=500,
-        ) from mysql_error
-    finally:
-        mysql.connection.commit()
-        cursor.close()
-
-    return jsonify(code=201, messages="User registered successfully."), 201
-
-
-@app.route("/post/send", methods=["POST"])
-def insert_post():
-    """
-    insert post
-
-    method: POST
-    body:
-    {
-        "forumID": int,
-        "postID": int, (auto increment), unnecessary
-        "postName": string,
-        "postTime": string,
-        "postText": string
-    }
-    return: JSON
-    {
-        code: int,
-        messages: string or list of dictionary
-    }
-
-    messages:
-        code 201: Post inserted successfully
-        code 400: Invalid JSON format, ForumID is required,
-                  Username is required, PostTime is required,
-                  PostText is required
-                  username is too long, postTime is too long,
-                  postText is too long
-        code 500: MySQL Error [error code]: error message
-    """
-    # Retrieve and validate JSON data from the request
-    data = get_request_data()
-
-    # Validate required fields and enforce maximum lengths where needed
-    # post_id = validate_field(data, "postID", "PostID")
-    forum_id = validate_field(data, "forumID", "ForumID")
-    username = validate_field(data, "postName", "PostName", max_length=20)
-    post_time = validate_field(data, "postTime", "PostTime", max_length=23)
-    post_text = validate_field(data, "postText", "PostText", max_length=200)
-
-    cursor = mysql.connection.cursor()
-    try:
-        cursor.execute(
-            "INSERT INTO Posts (forumID, postName, postTime, postText) "
-            "VALUES (%s, %s, %s, %s)",
-            (forum_id, username, post_time, post_text),
-        )
-    except mysql.connection.Error as mysql_error:
-        print(f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}")
-        raise InvalidAPIUsage(
-            f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}",
-            status_code=500,
-        ) from mysql_error
-    finally:
-        mysql.connection.commit()
-        cursor.close()
-
-    return jsonify(code=201, messages="Post inserted successfully."), 201
-
-
-@app.route("/post/get", methods=["GET"])
-def get_post():
-    """
-    get post
-
-    method: GET
-    return: JSON
-    {
-        code: int,
-        messages: list of dictionary
-    }
-    """
-
-    cursor = mysql.connection.cursor()
-    cursor.execute(
-        "SELECT postID, forumID, postName, postTime, postText, email "
-        "FROM Posts, Users WHERE postName=username"
-    )
-    messages = cursor.fetchall()
-    cursor.close()
-    return jsonify(code=200, messages=messages)
-
-
-@app.route("/post/update", methods=["POST"])
-def edit_post():
-    """
-    edit post
-
-    method: POST
-    body:
-    {
-        "postID": int,
-        "forumID": int,
-        "postName": string,
-        "postTime": string,
-        "postText": string
-    }
-    return: JSON
-    {
-        code: int,
-        messages: string
-    }
-
-    messages:
-        code 200: Post updated successfully
-        code 400: Invalid JSON format, PostID is required, ForumID is required,
-                  Postname is required, PostTime is required,
-                  PostText is required, Postname is too long,
-                  PostTime is too long, PostText is too long
-        code 404: No such post
-        code 500: MySQL Error [error code]: error message
-    """
-    # Retrieve and validate JSON data from the request
-    data = get_request_data()
-
-    # Validate required fields and enforce maximum lengths where needed
-    post_id = validate_field(data, "postID", "PostID")
-    forum_id = validate_field(data, "forumID", "ForumID")
-    post_name = validate_field(data, "postName", "PostName", max_length=20)
-    post_time = validate_field(data, "postTime", "PostTime", max_length=23)
-    post_text = validate_field(data, "postText", "PostText", max_length=200)
-
-    cursor = mysql.connection.cursor()
-    try:
-        cursor.execute(
-            "UPDATE Posts SET postTime=%s, postText=%s "
-            "WHERE postName=%s AND postID=%s AND forumID=%s",
-            (post_time, post_text, post_name, post_id, forum_id),
-        )
-        if cursor.rowcount == 0:
-            raise InvalidAPIUsage("No Changes.", status_code=404)
-    except mysql.connection.Error as mysql_error:
-        print(f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}")
-        raise InvalidAPIUsage(
-            f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}",
-            status_code=500,
-        ) from mysql_error
-    finally:
-        mysql.connection.commit()
-        cursor.close()
-
-    return jsonify(code=201, messages="Post updated successfully."), 201
-
-
-@app.route("/post/delete", methods=["POST"])
-def delete_post():
-    """
-    delete post
-
-    method: POST
-    body: {"postID": int, "forumID": int, "postName": string}
-    return: JSON
-    {
-        code: int,
-        messages: string
-    }
-
-    messages:
-        code 226: Post deleted successfully
-        code 400: Invalid JSON format, PostID is required, ForumID is required, PostName is required
-        code 404: No such post
-        code 500: MySQL Error [error code]: error message
-    """
-    # Retrieve and validate JSON data from the request
-    data = get_request_data()
-
-    # Validate required fields and enforce maximum lengths where needed
-    post_id = validate_field(data, "postID", "PostID")
-    forum_id = validate_field(data, "forumID", "ForumID")
-    post_name = validate_field(data, "postName", "PostName", max_length=20)
-
-    cursor = mysql.connection.cursor()
-    try:
-        cursor.execute(
-            "DELETE FROM Posts WHERE postID=%s AND forumID=%s AND postName=%s",
-            (post_id, forum_id, post_name),
-        )
-        if cursor.rowcount == 0:
-            raise InvalidAPIUsage("No such post.", status_code=404)
-    except mysql.connection.Error as mysql_error:
-        print(f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}")
-        raise InvalidAPIUsage(
-            f"MySQL Error [{mysql_error.args[0]}]: {mysql_error.args[1]}",
-            status_code=500,
-        ) from mysql_error
-    finally:
-        mysql.connection.commit()
-        cursor.close()
-
-    return jsonify(code=226, messages="Post deleted successfully."), 226
-
-
-# if __name__ == "__main__":
-#     serve(app, host="0.0.0.0", port=80)
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=True)
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=80, debug=False)
+    # app.run(host="127.0.0.1", port=80, debug=True)
