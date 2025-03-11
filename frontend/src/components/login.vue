@@ -57,9 +57,9 @@ export default {
 
       try {
         const baseUrl = import.meta.env.VITE_BASE_URL
-        const response = await fetch(`${baseUrl}/user/login`, {
+        const response = await fetch(`${baseUrl}/api/user/login`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(loginData)
         });
 
@@ -70,8 +70,10 @@ export default {
         const result = await response.json();
         console.log("Login successful:", result);
 
-        // Store authentication token
-        localStorage.setItem("userToken", result.token);
+        // Store user information
+        localStorage.setItem("username", result.username);
+        localStorage.setItem("uid", result.uid);
+        localStorage.setItem("role", result.role);
 
         //alert("Login successful!");
         this.$router.push("/forum"); // Redirect to Forum Page
@@ -95,9 +97,9 @@ export default {
 
       try {
         const baseUrl = import.meta.env.VITE_BASE_URL
-        const response = await fetch(`${baseUrl}/user/register`, {
+        const response = await fetch(`${baseUrl}/api/user/register`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(newUser)
         });
 

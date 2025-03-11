@@ -67,167 +67,147 @@ export default {
   methods: {
     fetchPosts() {
       const baseUrl = import.meta.env.VITE_BASE_URL;
-      fetch(`${baseUrl}/post/get`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.code === 200 && data.messages) {
-            this.threads = [
-              ...this.threads,
-              ...data.messages.map(post => ({
-                id: post.postID,
-                author: post.postName,
-                content: post.postText,
-                date: post.postTime,
-                protected: false // Add any default or fetched data here
-              }))
-            ];
-          } else {
-            console.error('No posts or unexpected data structure');
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching posts:', error);
-        });
-    }
-    ,
+      fetch(`${baseUrl}/api/post`)
+          .then(response => response.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+              const formattedPosts = data.map(post => ({
+                id: post.post_id,
+                author: post.username,
+                content: post.text,
+                date: post.time,
+                title: `Post #${post.post_id}`,
+                protected: false
+              }));
+              this.threads = [...this.threads, ...formattedPosts];
+            } else {
+              console.error('Unexpected data structure');
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching posts:', error);
+          });
+    },
 
     async submitThread() {
-      let newPost = null;
-      let formattedPost = null;
-      let updatedPost = null;
-      let updatedPostDB = null;
       if (this.newThread.title && this.newThread.content) {
+        const currentTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
         if (this.isEditing) {
           try {
-            updatedPostDB = {
-              forumID: 1,
-              postID: this.newThread.id,
-              postName: this.newThread.username,
-              postTime: new Date().toISOString().split("T")[0],
-              postText: this.newThread.content
-            }
+            const updatedPost = {
+              forum_id: 1,
+              post_id: this.newThread.id,
+              username: this.newThread.username,
+              text: this.newThread.content
+            };
+
             const baseUrl = import.meta.env.VITE_BASE_URL;
-            const response = await fetch(`${baseUrl}/post/update`, {
-              method: "POST",
+            const response = await fetch(`${baseUrl}/api/post`, {
+              method: "PUT",
               headers: {
                 "Content-Type": "application/json"
               },
-              body: JSON.stringify(updatedPostDB) // Convert formattedPost to JSON format
+              body: JSON.stringify(updatedPost)
             });
 
             if (!response.ok) {
               throw new Error(`Failed to update post: ${response.statusText}`);
             }
 
-            const responseData = await response.json();
-            console.log("Post successfully updated:", responseData);
+            console.log("Post successfully updated");
 
-            updatedPost = {
-              id: updatedPostDB.postID,
+            this.threads[this.editIndex] = {
+              ...this.threads[this.editIndex],
               title: this.newThread.title,
-              content: updatedPostDB.postText,
-              author: updatedPostDB.postName,
-              date: updatedPostDB.postTime
+              content: this.newThread.content
+            };
 
-            }
-            this.threads = updatedPost;
-
+            this.isEditing = false;
+            this.editIndex = null;
           } catch (error) {
             console.error("Error updating post:", error);
           }
-          this.isEditing = false;
-          this.editIndex = null;
         } else {
-          newPost = {
-            id: this.threads.length + 5,
-            title: this.newThread.title,
-            author: this.newThread.username,
-            date: new Date().toISOString().split('T')[0],
-            content: this.newThread.content
-          }
-          formattedPost = {
-            forumID: 1,
-            postID: newPost.id,
-            postName: newPost.author,
-            postText: newPost.content,
-            postTime: newPost.date
-          }
-
-
           try {
+            const newPost = {
+              forum_id: 1,
+              username: this.newThread.username,
+              time: currentTime,
+              text: this.newThread.content
+            };
+
             const baseUrl = import.meta.env.VITE_BASE_URL;
-            const response = await fetch(`${baseUrl}/post/send`, {
+            const response = await fetch(`${baseUrl}/api/post`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
               },
-              body: JSON.stringify(formattedPost) // Convert formattedPost to JSON format
+              body: JSON.stringify(newPost)
             });
 
             if (!response.ok) {
-              throw new Error(`Failed to send post: ${response.statusText}`);
+              throw new Error(`Failed to create post: ${response.statusText}`);
             }
 
-            const responseData = await response.json();
-            console.log("Post successfully sent:", responseData);
+            console.log("Post successfully created");
 
-            // If the post was successfully sent, add it to the local threads list
-            this.threads.push(newPost);
-            this.newThread = { username: "", title: "", content: "" }; // Reset form fields
+            this.newThread = {username: "", title: "", content: ""};
+
+            this.fetchPosts();
           } catch (error) {
-            console.error("Error submitting post:", error);
+            console.error("Error creating post:", error);
           }
-
         }
       }
-
-      window.location.reload()
     },
 
     logout() {
-      localStorage.removeItem("userToken"); // Remove authentication token
+      localStorage.removeItem("username");
+      localStorage.removeItem("uid");
+      localStorage.removeItem("role");
       this.$router.push("/"); // Redirect to login page
     },
 
     checkAuth() {
-      const isAuthenticated = localStorage.getItem("userToken");
-      if (!isAuthenticated) {
+      const username = localStorage.getItem("username");
+      if (!username) {
         this.$router.push("/"); // Redirect to login if not authenticated
+      } else {
+        this.newThread.username = username;
       }
     },
 
     async deleteThread(index) {
-      let formattedPost = null;
-      formattedPost = {
-        forumID: 1,
-        postID: this.threads[index].id,
-        postName: this.threads[index].author
-      }
       try {
+        const postToDelete = {
+          forum_id: 1,
+          post_id: this.threads[index].id,
+          username: this.threads[index].author
+        };
+
         const baseUrl = import.meta.env.VITE_BASE_URL;
-        const response = await fetch(`${baseUrl}/post/delete`, {
-          method: "POST",
+        const response = await fetch(`${baseUrl}/api/post`, {
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(formattedPost) // Convert formattedPost to JSON format
+          body: JSON.stringify(postToDelete)
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to delet post: ${response.statusText}`);
+          throw new Error(`Failed to delete post: ${response.statusText}`);
         }
 
-        const responseData = await response.json();
-        console.log("Post successfully deleted:", responseData);
+        console.log("Post successfully deleted");
 
+        this.threads.splice(index, 1);
       } catch (error) {
         console.error("Error deleting post:", error);
       }
-      this.threads.splice(index, 1);
-      window.location.reload()
     },
-    editThread(index) {
 
+    editThread(index) {
       this.newThread = {
         id: this.threads[index].id,
         title: this.threads[index].title,
@@ -237,6 +217,7 @@ export default {
       this.isEditing = true;
       this.editIndex = index;
     },
+
     replyToThread(threadId) {
       alert(`Replying to thread ID: ${threadId}`);
     }
