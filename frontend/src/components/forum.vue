@@ -163,14 +163,13 @@ export default {
     },
 
     logout() {
-      localStorage.removeItem("username");
-      localStorage.removeItem("uid");
-      localStorage.removeItem("role");
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("currentRole");
       this.$router.push("/"); // Redirect to login page
     },
 
     checkAuth() {
-      const username = localStorage.getItem("username");
+      const username = localStorage.getItem("currentUser");
       if (!username) {
         this.$router.push("/"); // Redirect to login if not authenticated
       } else {

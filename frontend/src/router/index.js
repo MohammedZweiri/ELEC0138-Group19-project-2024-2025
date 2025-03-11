@@ -14,7 +14,7 @@ const router = createRouter({
 
 // Navigation Guard to Protect Forum Page
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem("userToken"); // Check if user is logged in
+  const isAuthenticated = localStorage.getItem("currentUser"); // Check if user is logged in
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next("/"); // Redirect to Login if not authenticated

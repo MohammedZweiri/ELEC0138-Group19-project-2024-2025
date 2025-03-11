@@ -71,9 +71,8 @@ export default {
         console.log("Login successful:", result);
 
         // Store user information
-        localStorage.setItem("username", result.username);
-        localStorage.setItem("uid", result.uid);
-        localStorage.setItem("role", result.role);
+        localStorage.setItem("currentUser", result.username);
+        localStorage.setItem("currentRole", result.role);
 
         //alert("Login successful!");
         this.$router.push("/forum"); // Redirect to Forum Page
