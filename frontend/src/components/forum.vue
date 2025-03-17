@@ -63,7 +63,7 @@ export default {
   methods: {
     fetchPosts() {
       const baseUrl = import.meta.env.VITE_BASE_URL;
-      fetch(`http://154.201.83.152:8081/api/post`)
+      fetch(`${baseUrl}/api/post`)
           .then(response => response.json())
           .then(data => {
             if (Array.isArray(data)) {
@@ -99,7 +99,7 @@ export default {
             };
 
             const baseUrl = import.meta.env.VITE_BASE_URL;
-            const response = await fetch(`http://154.201.83.152:8081/api/post`, {
+            const response = await fetch(`${baseUrl}/api/post`, {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json"
@@ -134,7 +134,7 @@ export default {
             };
 
             const baseUrl = import.meta.env.VITE_BASE_URL;
-            const response = await fetch(`http://154.201.83.152:8081/api/post`, {
+            const response = await fetch(`${baseUrl}/api/post`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -182,7 +182,7 @@ export default {
         };
 
         const baseUrl = import.meta.env.VITE_BASE_URL;
-        const response = await fetch(`http://154.201.83.152:8081/api/post`, {
+        const response = await fetch(`${baseUrl}/api/post`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json"
