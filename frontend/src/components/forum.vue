@@ -24,10 +24,6 @@
             <input type="text" id="username" v-model="newThread.username" :disabled="isEditing" required>
           </div>
           <div>
-            <label for="thread-title">Thread Title:</label>
-            <input type="text" id="thread-title" v-model="newThread.title" required>
-          </div>
-          <div>
             <label for="content">Content:</label>
             <textarea id="content" v-model="newThread.content" rows="6" required></textarea>
           </div>
@@ -67,7 +63,7 @@ export default {
   methods: {
     fetchPosts() {
       const baseUrl = import.meta.env.VITE_BASE_URL;
-      fetch(`${baseUrl}/api/post`)
+      fetch(`http://154.201.83.152:8081/api/post`)
           .then(response => response.json())
           .then(data => {
             if (Array.isArray(data)) {
@@ -103,7 +99,7 @@ export default {
             };
 
             const baseUrl = import.meta.env.VITE_BASE_URL;
-            const response = await fetch(`${baseUrl}/api/post`, {
+            const response = await fetch(`http://154.201.83.152:8081/api/post`, {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json"
@@ -138,7 +134,7 @@ export default {
             };
 
             const baseUrl = import.meta.env.VITE_BASE_URL;
-            const response = await fetch(`${baseUrl}/api/post`, {
+            const response = await fetch(`http://154.201.83.152:8081/api/post`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -186,7 +182,7 @@ export default {
         };
 
         const baseUrl = import.meta.env.VITE_BASE_URL;
-        const response = await fetch(`${baseUrl}/api/post`, {
+        const response = await fetch(`http://154.201.83.152:8081/api/post`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json"
