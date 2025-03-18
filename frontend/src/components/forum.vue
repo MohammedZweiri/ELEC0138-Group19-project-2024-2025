@@ -86,7 +86,7 @@ export default {
     },
 
     async submitThread() {
-      if (this.newThread.title && this.newThread.content) {
+      if (this.newThread.content) {
         const currentTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
         if (this.isEditing) {
