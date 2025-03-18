@@ -9,7 +9,7 @@
         <article class="thread" v-for="(thread, index) in threads" :key="thread.id">
           <h2>{{ thread.title }}</h2>
           <div class="thread-meta">Posted by {{ thread.author }} on {{ thread.date }}</div>
-          <p>{{ thread.content }}</p>
+          <p v-html="thread.content"></p>
           <div v-if="!thread.protected && thread.author == currentUser">
             <button @click="editThread(index)">Edit</button>
             <button @click="deleteThread(index)">Delete</button>
