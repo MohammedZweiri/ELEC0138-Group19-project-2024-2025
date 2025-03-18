@@ -63,7 +63,13 @@ export default {
   methods: {
     fetchPosts() {
       const baseUrl = import.meta.env.VITE_BASE_URL;
-      fetch(`${baseUrl}/api/post`)
+      const token = localStorage.getItem("access_token");
+
+      fetch(`${baseUrl}/api/post`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
           .then(response => response.json())
           .then(data => {
             if (Array.isArray(data)) {
@@ -88,6 +94,7 @@ export default {
     async submitThread() {
       if (this.newThread.content) {
         const currentTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        const token = localStorage.getItem("access_token");
 
         if (this.isEditing) {
           try {
@@ -102,7 +109,8 @@ export default {
             const response = await fetch(`${baseUrl}/api/post`, {
               method: "PUT",
               headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
               },
               body: JSON.stringify(updatedPost)
             });
@@ -137,7 +145,8 @@ export default {
             const response = await fetch(`${baseUrl}/api/post`, {
               method: "POST",
               headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
               },
               body: JSON.stringify(newPost)
             });
@@ -161,13 +170,16 @@ export default {
     logout() {
       localStorage.removeItem("currentUser");
       localStorage.removeItem("currentRole");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
       this.$router.push("/"); // Redirect to login page
     },
 
     checkAuth() {
+      const token = localStorage.getItem("access_token");
       const username = localStorage.getItem("currentUser");
-      if (!username) {
-        this.$router.push("/"); // Redirect to login if not authenticated
+      if (!token) {
+        this.$router.push("/"); // Redirect to login if no token
       } else {
         this.newThread.username = username;
       }
@@ -182,10 +194,13 @@ export default {
         };
 
         const baseUrl = import.meta.env.VITE_BASE_URL;
+        const token = localStorage.getItem("access_token");
+
         const response = await fetch(`${baseUrl}/api/post`, {
           method: "DELETE",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify(postToDelete)
         });

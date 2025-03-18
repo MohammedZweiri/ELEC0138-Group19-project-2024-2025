@@ -14,10 +14,10 @@ const router = createRouter({
 
 // Navigation Guard to Protect Forum Page
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem("currentUser"); // Check if user is logged in
+  const accessToken = localStorage.getItem("access_token"); // Check if user has a valid token
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/"); // Redirect to Login if not authenticated
+  if (to.meta.requiresAuth && !accessToken) {
+    next("/"); // Redirect to Login if no token
   } else {
     next(); // Proceed to requested route
   }

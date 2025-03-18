@@ -70,9 +70,11 @@ export default {
         const result = await response.json();
         console.log("Login successful:", result);
 
-        // Store user information
+        // Store user information and JWT tokens
         localStorage.setItem("currentUser", result.username);
         localStorage.setItem("currentRole", result.role);
+        localStorage.setItem("access_token", result.access_token);
+        localStorage.setItem("refresh_token", result.refresh_token);
 
         //alert("Login successful!");
         this.$router.push("/forum"); // Redirect to Forum Page

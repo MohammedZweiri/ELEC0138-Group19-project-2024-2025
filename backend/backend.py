@@ -1,15 +1,57 @@
+import datetime
 import warnings
+from copy import deepcopy
+from functools import wraps
 
 import marshmallow as ma
 from flask import Flask
 from flask.views import MethodView
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_mysqldb import MySQL
 from flask_smorest import Api, Blueprint, abort
 from flask_smorest.error_handler import ErrorSchema
 from marshmallow import validate
 
 warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name ")
+
+
+def jwt_required_with_oas(*args, **kwargs):
+    """Overwrite the jwt_required decorator to add openapi doc support."""
+
+    # noinspection PyProtectedMember
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*f_args, **f_kwargs):
+            return jwt_required(*args, **kwargs)(func)(*f_args, **f_kwargs)
+
+        # Add the security information to the openapi doc
+        wrapper._apidoc = deepcopy(getattr(func, "_apidoc", {}))
+        wrapper._apidoc.setdefault('manual_doc', {})
+        wrapper._apidoc['manual_doc']['security'] = [{"Bearer Auth": []}]
+
+        # Add the 401 response to the openapi doc
+        wrapper._apidoc['manual_doc'].setdefault('responses', {})
+        wrapper._apidoc['manual_doc']['responses'][401] = {
+            'description': 'Unauthorized',
+            'content': {
+                'application/json': {
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            "msg": {  # current_app.config["JWT_ERROR_MESSAGE_KEY"]
+                                'type': 'string',
+                                'example': 'Unauthorized'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return wrapper
+
+    return decorator
 
 
 class UserSchema(ma.Schema):
@@ -22,11 +64,16 @@ class UserSchema(ma.Schema):
     password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
 
 
+class UserLoginResponseSchema(UserSchema):
+    access_token = ma.fields.String(dump_only=True)
+    refresh_token = ma.fields.String(dump_only=True)
+
+
 class PostSchema(ma.Schema):
     post_id = ma.fields.Integer(required=True, attribute="postID")
     forum_id = ma.fields.Integer(required=True, attribute="forumID")
     username = ma.fields.String(required=True, attribute="postName", validate=validate.Length(max=20))
-    time = ma.fields.String(required=True, attribute="postTime", validate=validate.Length(max=23))
+    time = ma.fields.DateTime(format="%Y-%m-%d %H:%M:%S", required=True, attribute="postTime")
     text = ma.fields.String(required=True, attribute="postText", validate=validate.Length(max=200))
 
 
@@ -41,6 +88,19 @@ app.config["OPENAPI_JSON_PATH"] = "api-spec.json"
 app.config["OPENAPI_URL_PREFIX"] = "/api/docs"
 app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+app.config["API_SPEC_OPTIONS"] = {
+    "components": {
+        "securitySchemes": {
+            "Bearer Auth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "bearerFormat": "JWT",
+                "description": "Enter: **'Bearer &lt;JWT&gt;'**, where JWT is the access token",
+            }
+        }
+    },
+}
 
 # flask-mysql
 app.config["MYSQL_HOST"] = "47.122.18.213"
@@ -49,9 +109,15 @@ app.config["MYSQL_PASSWORD"] = "3aRtVyBN17dUbCq9"
 app.config["MYSQL_DB"] = "ELEC0138"
 app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 
+# flask-jwt-extended
+app.config["JWT_SECRET_KEY"] = "super-super-secret"
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=1)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+
 CORS(app)
 api = Api(app)
 mysql = MySQL(app)
+jwt = JWTManager(app)
 
 users_bp = Blueprint('user', __name__, url_prefix='/api/user')
 posts_bp = Blueprint('post', __name__, url_prefix='/api/post')
@@ -92,7 +158,7 @@ class Users(MethodView):
 @users_bp.route('/login', endpoint='login')
 class UsersLogin(MethodView):
     @users_bp.arguments(UserSchema(only=("username", "password")), location='json')
-    @users_bp.response(200, UserSchema)
+    @users_bp.response(200, UserLoginResponseSchema)
     @users_bp.alt_response(404, schema=ErrorSchema)
     @users_bp.alt_response(401, schema=ErrorSchema)
     def post(self, args):
@@ -108,12 +174,18 @@ class UsersLogin(MethodView):
             if user['password'] != password:
                 abort(401, message='Incorrect password')
 
+        # Create access token and refresh token
+        user['access_token'] = create_access_token(identity=user['username'])
+        user['refresh_token'] = create_access_token(identity=user['username'], fresh=True)
+
         return user
 
 
 @posts_bp.route('', endpoint='index')
 class Posts(MethodView):
+    @jwt_required_with_oas()
     @posts_bp.response(200, PostSchema(many=True))
+    @posts_bp.alt_response(403, schema=ErrorSchema)
     def get(self):
         """Get all posts"""
         with mysql.connection.cursor() as cursor:
@@ -124,11 +196,17 @@ class Posts(MethodView):
             )
             return list(cursor.fetchall())
 
+    @jwt_required_with_oas()
     @posts_bp.arguments(PostSchema(only=("forum_id", "username", "time", "text")), location='json')
     @posts_bp.response(201)
+    @posts_bp.alt_response(403, schema=ErrorSchema)
     def post(self, args):
         """Create a new post"""
         fid, name, time, text = args['forumID'], args['postName'], args['postTime'], args['postText']
+        current_user = get_jwt_identity()
+
+        if current_user != name:
+            abort(403, message='You can only create posts with your own username')
 
         with mysql.connection.cursor() as cursor:
             cursor.execute(
@@ -137,11 +215,16 @@ class Posts(MethodView):
             )
             mysql.connection.commit()
 
+    @jwt_required_with_oas()
     @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username", "text")), location='json')
     @posts_bp.response(204)
     def put(self, args):
         """Update a post"""
         fid, pid, name, text = args['forumID'], args['postID'], args['postName'], args['postText']
+        current_user = get_jwt_identity()
+
+        if current_user != name:
+            abort(403, message='You can only update posts with your own username')
 
         with mysql.connection.cursor() as cursor:
             cursor.execute(
@@ -150,11 +233,17 @@ class Posts(MethodView):
             )
             mysql.connection.commit()
 
+    @jwt_required_with_oas()
     @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username")), location='json')
     @posts_bp.response(204)
+    @posts_bp.alt_response(403, schema=ErrorSchema)
     def delete(self, args):
         """Delete a post"""
         fid, pid, name = args['forumID'], args['postID'], args['postName']
+        current_user = get_jwt_identity()
+
+        if current_user != name:
+            abort(403, message='You can only delete posts with your own username')
 
         with mysql.connection.cursor() as cursor:
             cursor.execute(
@@ -166,6 +255,8 @@ class Posts(MethodView):
 
 api.register_blueprint(users_bp)
 api.register_blueprint(posts_bp)
+
+print(app.url_map)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=80, debug=False)
