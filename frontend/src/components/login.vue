@@ -3,7 +3,7 @@
     <h2 v-if="isRegistering">Create an Account</h2>
     <h2 v-else>Forum Login</h2>
 
-    <form @submit.prevent="isRegistering ? registerUser() : submitLogin()">
+    <form @submit.prevent="isRegistering ? registerUser() : createCaptcha()">
       <div class="form-group">
         <label for="username">Username:</label>
         <input type="text" id="username" v-model="username" placeholder="Enter your username" required>
@@ -35,16 +35,48 @@
 
 <script>
 export default {
+
   data() {
     return {
       username: "",
       email: "",
       password: "",
+      recaptchaToken: "",
+      loading: false,
       isRegistering: false
     };
   },
+
+
   methods: {
-    async submitLogin() {
+
+   async createCaptcha() {
+
+    this.loading = true;
+
+        try {
+          
+          const siteKey = import.meta.env.SITE_KEY
+          if (!window.grecaptcha || !window.grecaptcha.execute) {
+              throw new Error('reCAPTCHA not loaded');
+          }
+    
+    // Execute recaptcha
+          const token = await window.grecaptcha.execute(siteKey, {action: 'login'});
+
+        await this.submitLogin(token)
+
+        } catch (error) {
+            console.error('reCAPTCHA error:', error);
+            alert('Error verifying reCAPTCHA. Please try again.');
+          } finally {
+            this.loading = false;
+          };
+  },
+
+
+    async submitLogin(token) {
+      
       if (!this.username || !this.password) {
         alert("Please fill in all fields.");
         return;
@@ -52,10 +84,12 @@ export default {
 
       const loginData = {
         username: this.username,
-        password: this.password
+        password: this.password,
+        recaptchaToken: token
       };
 
       try {
+         
         const baseUrl = import.meta.env.VITE_BASE_URL
         const response = await fetch(`${baseUrl}/api/user/login`, {
           method: "POST",
@@ -68,13 +102,12 @@ export default {
         }
 
         const result = await response.json();
-        console.log("Login successful:", result);
+        //console.log("Login successful:", result);
 
-        // Store user information and JWT tokens
+        // Store user information
         localStorage.setItem("currentUser", result.username);
         localStorage.setItem("currentRole", result.role);
-        localStorage.setItem("access_token", result.access_token);
-        localStorage.setItem("refresh_token", result.refresh_token);
+        localStorage.setItem("access_token", result.token);
 
         //alert("Login successful!");
         this.$router.push("/forum"); // Redirect to Forum Page
