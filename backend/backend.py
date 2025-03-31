@@ -2,9 +2,12 @@ import datetime
 import warnings
 from copy import deepcopy
 from functools import wraps
+import requests
+from dotenv import load_doatenv
+import os
 
 import marshmallow as ma
-from flask import Flask
+from flask import Flask, jsonify
 from flask.views import MethodView
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -61,6 +64,8 @@ class UserSchema(ma.Schema):
     uid = ma.fields.Integer(dump_only=True, attribute="userID", )
     role = ma.fields.String(dump_only=True)
 
+    recaptchaToken = ma.fields.String(required=True, attribute="recaptchaToken" )
+
     password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
 
 
@@ -114,6 +119,15 @@ app.config["JWT_SECRET_KEY"] = "super-super-secret"
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=1)
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
 
+
+# load environment variables as if they came from the actual environment
+load_doatenv()
+
+
+# flask CAPTCHA-v3
+reCAPTCHA_SECRET_KEY = os.getenv('SECRET_KEY')
+
+
 CORS(app)
 api = Api(app)
 mysql = MySQL(app)
@@ -121,6 +135,15 @@ jwt = JWTManager(app)
 
 users_bp = Blueprint('user', __name__, url_prefix='/api/user')
 posts_bp = Blueprint('post', __name__, url_prefix='/api/post')
+
+
+def verify_recaptcha(token):
+    """ Verify reCAPTCHA toekn with google API"""
+    url = "https://www.google.com/recaptcha/api/siteverify"
+    data = {"secret": reCAPTCHA_SECRET_KEY, "response": token}
+    response = requests.post(url, data=data).json()
+    return response.get("success", False)
+
 
 
 @users_bp.route('register', endpoint='register')
@@ -157,13 +180,16 @@ class Users(MethodView):
 
 @users_bp.route('/login', endpoint='login')
 class UsersLogin(MethodView):
-    @users_bp.arguments(UserSchema(only=("username", "password")), location='json')
+    @users_bp.arguments(UserSchema(only=("username", "recaptchaToken", "password")), location='json')
     @users_bp.response(200, UserLoginResponseSchema)
     @users_bp.alt_response(404, schema=ErrorSchema)
     @users_bp.alt_response(401, schema=ErrorSchema)
     def post(self, args):
         """Login"""
-        username, password = args['username'], args['password']
+        username, password, recaptcha_token = args['username'], args['password'], args['recaptchaToken']
+
+        if not verify_recaptcha(recaptcha_token):
+            return jsonify({"message": "recaptcha failed"}), 400
 
         with mysql.connection.cursor() as cursor:
             cursor.execute("SELECT * FROM Users WHERE username = %s", (username,))
@@ -259,5 +285,5 @@ api.register_blueprint(posts_bp)
 print(app.url_map)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=80, debug=False)
+    app.run(host="0.0.0.0", port=2500, debug=False)
     # app.run(host="127.0.0.1", port=80, debug=True)
