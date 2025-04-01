@@ -13,7 +13,7 @@ app.use(router);
 
 // Load reCAPTCHA plugin safely
 app.use(VueRecaptchaPlugin, {
-    siteKey: "6LffjQMrAAAAALrbVBCHbmOqJrPJVvtlmSf2Cl-G", // Uses environment variable
+    siteKey: import.meta.env.SITE_KEY, // Uses environment variable
     loaderOptions: {
         useRecaptchaNet: true,  // Useful for certain regions
         autoHideBadge: false    
