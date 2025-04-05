@@ -56,7 +56,7 @@ export default {
 
         try {
           
-          const siteKey = import.meta.env.SITE_KEY
+          const siteKey = import.meta.env.VITE_SITE_KEY
           if (!window.grecaptcha || !window.grecaptcha.execute) {
               throw new Error('reCAPTCHA not loaded');
           }
