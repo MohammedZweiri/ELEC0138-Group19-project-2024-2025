@@ -139,10 +139,18 @@ posts_bp = Blueprint('post', __name__, url_prefix='/api/post')
 
 def verify_recaptcha(token):
     """ Verify reCAPTCHA toekn with google API"""
-    url = "https://www.google.com/recaptcha/api/siteverify"
-    data = {"secret": reCAPTCHA_SECRET_KEY, "response": token}
-    response = requests.post(url, data=data).json()
-    return response.get("success", False)
+
+    try:
+
+        url = "https://www.google.com/recaptcha/api/siteverify"
+        data = {"secret": reCAPTCHA_SECRET_KEY, "response": token}
+        print(data)
+        response = requests.post(url, data=data).json()
+        return response.get("success", False)
+    
+    except Exception as e:
+        print(f"reCAPTCHA verification failed. Error: {e}")
+
 
 
 
