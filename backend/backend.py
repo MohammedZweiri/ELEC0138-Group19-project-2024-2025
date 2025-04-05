@@ -3,7 +3,7 @@ import warnings
 from copy import deepcopy
 from functools import wraps
 import requests
-from dotenv import load_doatenv
+from dotenv import load_dotenv
 import os
 
 import marshmallow as ma
@@ -121,7 +121,7 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
 
 
 # load environment variables as if they came from the actual environment
-load_doatenv()
+load_dotenv()
 
 
 # flask CAPTCHA-v3
