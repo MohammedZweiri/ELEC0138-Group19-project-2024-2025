@@ -1,8 +1,12 @@
 <template>
   <div class="login-container">
-    <h2 v-if="isRegistering">Create an Account</h2>
-    <h2 v-else>Forum Login</h2>
+    
+    <!-- <img src="./images/logo.png" alt="MyReddit"/> -->
 
+    <h2 v-if="isRegistering">Create an Account</h2>
+    
+    <h2 v-else>Forum Login</h2>
+    
     <form @submit.prevent="isRegistering ? registerUser() : createCaptcha()">
       <div class="form-group">
         <label for="username">Username:</label>
@@ -102,12 +106,11 @@ export default {
         }
 
         const result = await response.json();
-        //console.log("Login successful:", result);
 
         // Store user information
         localStorage.setItem("currentUser", result.username);
         localStorage.setItem("currentRole", result.role);
-        localStorage.setItem("access_token", result.token);
+        localStorage.setItem("access_token", result.access_token);
 
         //alert("Login successful!");
         this.$router.push("/forum"); // Redirect to Forum Page
@@ -179,7 +182,7 @@ body {
   background-color: #fff;
   padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(250, 249, 249, 0.1);
   width: 300px;
 }
 
