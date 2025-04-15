@@ -64,7 +64,7 @@ class UserSchema(ma.Schema):
     uid = ma.fields.Integer(dump_only=True, attribute="userID", )
     role = ma.fields.String(dump_only=True)
 
-    recaptchaToken = ma.fields.String(required=True, attribute="recaptchaToken" )
+    recaptchaToken = ma.fields.String(required=True, attribute="recaptchaToken")
 
     password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
 
@@ -155,7 +155,7 @@ def verify_recaptcha(token):
 
 @users_bp.route('register', endpoint='register')
 class Users(MethodView):
-    @users_bp.arguments(UserSchema, location='json')
+    @users_bp.arguments(UserSchema(only=("username", "email", "password")), location='json')
     @users_bp.response(201, UserSchema)
     @users_bp.alt_response(409, schema=ErrorSchema)
     def post(self, args):
@@ -292,5 +292,5 @@ api.register_blueprint(posts_bp)
 print(app.url_map)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=80, debug=False)
+    app.run(host="0.0.0.0", port=2500, debug=False)
     # app.run(host="127.0.0.1", port=80, debug=True)
