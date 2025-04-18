@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 
 
 victims_info = "victim_list.csv"
-phishing_server = "http://localhost:5173/" # Change this to the actual fake server
+phishing_server = "https://eiec0138-forum.0138019.xyz/" # Change this to the actual fake server
 
 # Open the sender details
 with open("sender.json", "r") as file:
