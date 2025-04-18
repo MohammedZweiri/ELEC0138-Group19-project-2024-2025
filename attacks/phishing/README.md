@@ -35,10 +35,10 @@ A website similar to the real one for demonstration purpose under https://eiec01
     - Then, it iterates throught each url and provides the phishing probability. 
     - The training data and feature extractor is taken from https://github.com/vaibhavbichave/Phishing-URL-Detection/tree/master. 
     - The model is retrained via running
-            ```
-        cd attacks/phishing/model
-        python training.py
-        ```
+```
+cd attacks/phishing/model
+python training.py
+```
 
 2. To run the url test:
 ```
