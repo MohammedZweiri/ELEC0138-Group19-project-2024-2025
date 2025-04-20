@@ -7,7 +7,7 @@ from functools import wraps
 import marshmallow as ma
 import requests
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from flask import Flask
 from flask.views import MethodView
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
@@ -61,7 +61,7 @@ def jwt_required_with_oas(*args, **kwargs):
 
 
 def verify_recaptcha(token):
-    """Verify reCAPTCHA toekn with google API"""
+    """Verify reCAPTCHA token with Google API"""
 
     try:
         url = "https://www.google.com/recaptcha/api/siteverify"
@@ -71,20 +71,26 @@ def verify_recaptcha(token):
 
     except Exception as e:
         print(f"reCAPTCHA verification failed. Error: {e}")
+        return None
 
 
-class UserSchema(ma.Schema):
+class UserBaseSchema(ma.Schema):
     username = ma.fields.String(required=True, validate=validate.Length(max=20))
-    email = ma.fields.Email(required=True, validate=validate.Length(max=50))
+
+    password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
 
     uid = ma.fields.Integer(dump_only=True, attribute="userID")
     role = ma.fields.String(dump_only=True)
 
-    password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
-    recaptchaToken = ma.fields.String(required=True, attribute="recaptchaToken")
+
+class UserRegisterSchema(UserBaseSchema):
+    email = ma.fields.Email(required=True, validate=validate.Length(max=50))
 
 
-class UserLoginResponseSchema(UserSchema):
+class UserLoginSchema(UserBaseSchema):
+    recaptcha_token = ma.fields.String(load_only=True, required=True)
+
+    email = ma.fields.Email(dump_only=True)
     access_token = ma.fields.String(dump_only=True)
     refresh_token = ma.fields.String(dump_only=True)
 
@@ -93,7 +99,7 @@ class PostSchema(ma.Schema):
     post_id = ma.fields.Integer(required=True, attribute="postID")
     forum_id = ma.fields.Integer(required=True, attribute="forumID")
     username = ma.fields.String(required=True, attribute="postName", validate=validate.Length(max=20))
-    time = ma.fields.DateTime(format="%Y-%m-%d %H:%M:%S", required=True, attribute="postTime")
+    time = ma.fields.DateTime(required=True, attribute="postTime", format="%Y-%m-%d %H:%M:%S")
     text = ma.fields.String(required=True, attribute="postText", validate=validate.Length(max=200))
 
 
@@ -143,14 +149,14 @@ users_bp = Blueprint("user", __name__, url_prefix="/api/user")
 posts_bp = Blueprint("post", __name__, url_prefix="/api/post")
 
 
-@users_bp.route("register", endpoint="register")
+@users_bp.route("/register", endpoint="register")
 class Users(MethodView):
-    @users_bp.arguments(UserSchema(only=("username", "email", "password")), location="json")
-    @users_bp.response(201, UserSchema)
+    @users_bp.arguments(UserRegisterSchema, location="json")
+    @users_bp.response(201, UserRegisterSchema)
     @users_bp.alt_response(409, schema=ErrorSchema)
     def post(self, args):
         """Create a new user"""
-        email, password, name = args["email"], args["password"], args["username"]
+        email, name, password = args["email"], args["username"], args["password"]
 
         with mysql.connection.cursor() as cursor:
             # Check if user's email already exists
@@ -177,16 +183,16 @@ class Users(MethodView):
 
 @users_bp.route("/login", endpoint="login")
 class UsersLogin(MethodView):
-    @users_bp.arguments(UserSchema(only=("username", "recaptchaToken", "password")), location="json")
-    @users_bp.response(200, UserLoginResponseSchema)
+    @users_bp.arguments(UserLoginSchema, location="json")
+    @users_bp.response(200, UserLoginSchema)
     @users_bp.alt_response(404, schema=ErrorSchema)
     @users_bp.alt_response(401, schema=ErrorSchema)
     def post(self, args):
         """Login"""
-        username, password, recaptcha_token = (args["username"], args["password"], args["recaptchaToken"])
+        username, password, recaptcha_token = args["username"], args["password"], args["recaptchaToken"]
 
         if not verify_recaptcha(recaptcha_token):
-            return jsonify({"message": "recaptcha failed"}), 400
+            abort(401, message="reCAPTCHA verification failed")
 
         with mysql.connection.cursor() as cursor:
             cursor.execute("SELECT * FROM Users WHERE username = %s", (username,))
