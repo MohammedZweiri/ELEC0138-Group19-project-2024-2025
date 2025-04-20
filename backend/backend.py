@@ -10,18 +10,16 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask.views import MethodView
 from flask_cors import CORS
-from flask_jwt_extended import (
-    JWTManager,
-    create_access_token,
-    get_jwt_identity,
-    jwt_required,
-)
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
 from flask_mysqldb import MySQL
 from flask_smorest import Api, Blueprint, abort
 from flask_smorest.error_handler import ErrorSchema
 from marshmallow import validate
 
 warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name ")
+
+load_dotenv()
+reCAPTCHA_SECRET_KEY = os.getenv("SECRET_KEY")
 
 
 def jwt_required_with_oas(*args, **kwargs):
@@ -62,21 +60,28 @@ def jwt_required_with_oas(*args, **kwargs):
     return decorator
 
 
+def verify_recaptcha(token):
+    """Verify reCAPTCHA toekn with google API"""
+
+    try:
+        url = "https://www.google.com/recaptcha/api/siteverify"
+        data = {"secret": reCAPTCHA_SECRET_KEY, "response": token}
+        response = requests.post(url, data=data).json()
+        return response.get("success", False)
+
+    except Exception as e:
+        print(f"reCAPTCHA verification failed. Error: {e}")
+
+
 class UserSchema(ma.Schema):
     username = ma.fields.String(required=True, validate=validate.Length(max=20))
     email = ma.fields.Email(required=True, validate=validate.Length(max=50))
 
-    uid = ma.fields.Integer(
-        dump_only=True,
-        attribute="userID",
-    )
+    uid = ma.fields.Integer(dump_only=True, attribute="userID")
     role = ma.fields.String(dump_only=True)
 
+    password = ma.fields.String(load_only=True, required=True, validate=validate.Length(min=7, max=50))
     recaptchaToken = ma.fields.String(required=True, attribute="recaptchaToken")
-
-    password = ma.fields.String(
-        load_only=True, required=True, validate=validate.Length(min=7, max=50)
-    )
 
 
 class UserLoginResponseSchema(UserSchema):
@@ -87,15 +92,9 @@ class UserLoginResponseSchema(UserSchema):
 class PostSchema(ma.Schema):
     post_id = ma.fields.Integer(required=True, attribute="postID")
     forum_id = ma.fields.Integer(required=True, attribute="forumID")
-    username = ma.fields.String(
-        required=True, attribute="postName", validate=validate.Length(max=20)
-    )
-    time = ma.fields.DateTime(
-        format="%Y-%m-%d %H:%M:%S", required=True, attribute="postTime"
-    )
-    text = ma.fields.String(
-        required=True, attribute="postText", validate=validate.Length(max=200)
-    )
+    username = ma.fields.String(required=True, attribute="postName", validate=validate.Length(max=20))
+    time = ma.fields.DateTime(format="%Y-%m-%d %H:%M:%S", required=True, attribute="postTime")
+    text = ma.fields.String(required=True, attribute="postText", validate=validate.Length(max=200))
 
 
 app = Flask(__name__)
@@ -135,15 +134,6 @@ app.config["JWT_SECRET_KEY"] = "super-super-secret"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(days=1)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = datetime.timedelta(days=30)
 
-
-# load environment variables as if they came from the actual environment
-load_dotenv()
-
-
-# flask CAPTCHA-v3
-reCAPTCHA_SECRET_KEY = os.getenv("SECRET_KEY")
-
-
 CORS(app)
 api = Api(app)
 mysql = MySQL(app)
@@ -153,25 +143,9 @@ users_bp = Blueprint("user", __name__, url_prefix="/api/user")
 posts_bp = Blueprint("post", __name__, url_prefix="/api/post")
 
 
-def verify_recaptcha(token):
-    """Verify reCAPTCHA toekn with google API"""
-
-    try:
-
-        url = "https://www.google.com/recaptcha/api/siteverify"
-        data = {"secret": reCAPTCHA_SECRET_KEY, "response": token}
-        response = requests.post(url, data=data).json()
-        return response.get("success", False)
-
-    except Exception as e:
-        print(f"reCAPTCHA verification failed. Error: {e}")
-
-
 @users_bp.route("register", endpoint="register")
 class Users(MethodView):
-    @users_bp.arguments(
-        UserSchema(only=("username", "email", "password")), location="json"
-    )
+    @users_bp.arguments(UserSchema(only=("username", "email", "password")), location="json")
     @users_bp.response(201, UserSchema)
     @users_bp.alt_response(409, schema=ErrorSchema)
     def post(self, args):
@@ -203,19 +177,13 @@ class Users(MethodView):
 
 @users_bp.route("/login", endpoint="login")
 class UsersLogin(MethodView):
-    @users_bp.arguments(
-        UserSchema(only=("username", "recaptchaToken", "password")), location="json"
-    )
+    @users_bp.arguments(UserSchema(only=("username", "recaptchaToken", "password")), location="json")
     @users_bp.response(200, UserLoginResponseSchema)
     @users_bp.alt_response(404, schema=ErrorSchema)
     @users_bp.alt_response(401, schema=ErrorSchema)
     def post(self, args):
         """Login"""
-        username, password, recaptcha_token = (
-            args["username"],
-            args["password"],
-            args["recaptchaToken"],
-        )
+        username, password, recaptcha_token = (args["username"], args["password"], args["recaptchaToken"])
 
         if not verify_recaptcha(recaptcha_token):
             return jsonify({"message": "recaptcha failed"}), 400
@@ -231,9 +199,7 @@ class UsersLogin(MethodView):
 
         # Create access token and refresh token
         user["access_token"] = create_access_token(identity=user["username"])
-        user["refresh_token"] = create_access_token(
-            identity=user["username"], fresh=True
-        )
+        user["refresh_token"] = create_access_token(identity=user["username"], fresh=True)
 
         return user
 
@@ -254,19 +220,12 @@ class Posts(MethodView):
             return list(cursor.fetchall())
 
     @jwt_required_with_oas()
-    @posts_bp.arguments(
-        PostSchema(only=("forum_id", "username", "time", "text")), location="json"
-    )
+    @posts_bp.arguments(PostSchema(only=("forum_id", "username", "time", "text")), location="json")
     @posts_bp.response(201)
     @posts_bp.alt_response(403, schema=ErrorSchema)
     def post(self, args):
         """Create a new post"""
-        fid, name, time, text = (
-            args["forumID"],
-            args["postName"],
-            args["postTime"],
-            args["postText"],
-        )
+        fid, name, time, text = (args["forumID"], args["postName"], args["postTime"], args["postText"])
         current_user = get_jwt_identity()
 
         if current_user != name:
@@ -280,18 +239,11 @@ class Posts(MethodView):
             mysql.connection.commit()
 
     @jwt_required_with_oas()
-    @posts_bp.arguments(
-        PostSchema(only=("forum_id", "post_id", "username", "text")), location="json"
-    )
+    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username", "text")), location="json")
     @posts_bp.response(204)
     def put(self, args):
         """Update a post"""
-        fid, pid, name, text = (
-            args["forumID"],
-            args["postID"],
-            args["postName"],
-            args["postText"],
-        )
+        fid, pid, name, text = (args["forumID"], args["postID"], args["postName"], args["postText"])
         current_user = get_jwt_identity()
 
         if current_user != name:
@@ -305,9 +257,7 @@ class Posts(MethodView):
             mysql.connection.commit()
 
     @jwt_required_with_oas()
-    @posts_bp.arguments(
-        PostSchema(only=("forum_id", "post_id", "username")), location="json"
-    )
+    @posts_bp.arguments(PostSchema(only=("forum_id", "post_id", "username")), location="json")
     @posts_bp.response(204)
     @posts_bp.alt_response(403, schema=ErrorSchema)
     def delete(self, args):
