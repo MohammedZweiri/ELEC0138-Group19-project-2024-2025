@@ -1,46 +1,77 @@
 <template>
   <div class="login-container">
-
-    <!-- <img src="./images/logo.png" alt="MyReddit"/> -->
-
-    <h2 v-if="isRegistering">Create an Account</h2>
-    <h2 v-else>Forum Login</h2>
-
-    <form @submit.prevent="isRegistering ? userRegister() : userLogin()">
-      <div class="form-group">
-        <label for="username">Username:</label>
-        <input type="text" id="username" v-model="username" placeholder="Enter your username" required>
-      </div>
-
-      <div v-if="isRegistering" class="form-group">
-        <label for="email">Email:</label>
-        <input type="email" id="email" v-model="email" placeholder="Enter your email" required>
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input type="password" id="password" v-model="password" placeholder="Enter your password" required>
-      </div>
-
-      <button type="submit" class="login-btn">{{ isRegistering ? 'Register' : 'Login' }}</button>
-    </form>
-
-    <div class="extra-links">
-      <p v-if="!isRegistering"><a href="#">Forgot Password?</a></p>
-      <p>
-        {{ isRegistering ? "Already have an account?" : "Don't have an account?" }}
-        <br>
-        <a href="#" @click="toggleForm">{{ isRegistering ? "Login here" : "Register here" }}</a>
-      </p>
+    <div class="absolute top-4 right-4">
+      <ThemeToggle/>
     </div>
 
+    <div class="login-card">
+      <div class="mb-8 text-center">
+        <h2 class="login-title">
+          {{ isRegistering ? 'Join Our Community' : 'Welcome Back' }}
+        </h2>
+        <p class="login-subtitle">
+          {{ isRegistering ? 'Create a new account' : 'Sign in to your account' }}
+        </p>
+      </div>
+
+      <form @submit.prevent="isRegistering ? userRegister() : userLogin()" class="space-y-6">
+        <div>
+          <label for="username" class="form-label">Username</label>
+          <div class="relative">
+            <input type="text" id="username" v-model="username"
+                   placeholder="Enter your username" required class="form-input">
+          </div>
+        </div>
+
+        <div v-if="isRegistering">
+          <label for="email" class="form-label">Email</label>
+          <div class="relative">
+            <input type="email" id="email" v-model="email"
+                   placeholder="you@example.com" required class="form-input">
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="form-label">Password</label>
+          <div class="relative">
+            <input type="password" id="password" v-model="password"
+                   placeholder="Enter your password" required class="form-input">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-button">
+          {{ isRegistering ? 'Create Account' : 'Sign In' }}
+        </button>
+      </form>
+
+      <div class="mt-8 text-center">
+        <p v-if="!isRegistering" class="mb-4">
+          <a href="#" class="forgot-password-link"> Forgot your password? </a>
+        </p>
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-text">
+            <span class="divider-label">
+              {{ isRegistering ? "Already have an account?" : "Need an account?" }}
+            </span>
+          </div>
+        </div>
+        <button @click="toggleForm" class="toggle-form-button">
+          {{ isRegistering ? "Sign in instead" : "Create an account" }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import ThemeToggle from './ThemeToggle.vue';
 import {useAuthStore} from '@/stores/auth';
 
 export default {
+  components: {
+    ThemeToggle
+  },
   data() {
     return {username: '', email: '', password: '', loading: false, isRegistering: false};
   },
@@ -108,80 +139,65 @@ export default {
 };
 </script>
 
-<style scoped>
-/* Global reset */
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-}
-
+<style>
+/* Login page container */
 .login-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(250, 249, 249, 0.1);
-  width: 300px;
+  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4;
 }
 
-.login-container h2 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: #333;
+/* Card styles */
+.login-card {
+  @apply w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 transition-all duration-300;
 }
 
-.form-group {
-  margin-bottom: 1rem;
+.login-title {
+  @apply text-3xl font-extrabold text-gray-900 dark:text-white mb-2;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #555;
+.login-subtitle {
+  @apply text-gray-600 dark:text-gray-400;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+/* Form elements */
+.form-label {
+  @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
 }
 
-.login-btn {
-  width: 100%;
-  padding: 0.75rem;
-  border: none;
-  background-color: #3498db;
-  color: #fff;
-  font-size: 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 1rem;
+.form-input {
+  @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200;
 }
 
-.login-btn:hover {
-  background-color: #2980b9;
+.submit-button {
+  @apply w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-md;
 }
 
-.extra-links {
-  text-align: center;
-  margin-top: 1rem;
-  font-size: 0.9rem;
+/* Links and toggles */
+.forgot-password-link {
+  @apply text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm transition-colors;
 }
 
-.extra-links a {
-  color: #3498db;
-  text-decoration: none;
-  cursor: pointer;
+.toggle-form-button {
+  @apply mt-2 inline-flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:underline transition-colors;
 }
 
-.extra-links a:hover {
-  text-decoration: underline;
+/* Divider */
+.divider {
+  @apply relative py-3;
+}
+
+.divider-line {
+  @apply absolute inset-0 flex items-center;
+}
+
+.divider-line:before {
+  @apply w-full border-t border-gray-300 dark:border-gray-600 content-[''];
+}
+
+.divider-text {
+  @apply relative flex justify-center;
+}
+
+.divider-label {
+  @apply px-2 bg-white dark:bg-gray-800 text-sm text-gray-500 dark:text-gray-400;
 }
 </style>
