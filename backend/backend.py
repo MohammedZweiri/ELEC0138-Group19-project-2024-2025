@@ -191,7 +191,7 @@ class UsersLogin(MethodView):
     @users_bp.alt_response(401, schema=ErrorSchema)
     def post(self, args):
         """Login"""
-        username, password, recaptcha_token = args["username"], args["password"], args["recaptchaToken"]
+        username, password, recaptcha_token = args["username"], args["password"], args["recaptcha_token"]
 
         if not verify_recaptcha(recaptcha_token):
             abort(401, message="reCAPTCHA verification failed")
