@@ -1,13 +1,12 @@
 <template>
   <div class="login-container">
-    
+
     <!-- <img src="./images/logo.png" alt="MyReddit"/> -->
 
     <h2 v-if="isRegistering">Create an Account</h2>
-    
     <h2 v-else>Forum Login</h2>
-    
-    <form @submit.prevent="isRegistering ? registerUser() : createCaptcha()">
+
+    <form @submit.prevent="isRegistering ? userRegister() : userLogin()">
       <div class="form-group">
         <label for="username">Username:</label>
         <input type="text" id="username" v-model="username" placeholder="Enter your username" required>
@@ -34,120 +33,65 @@
         <a href="#" @click="toggleForm">{{ isRegistering ? "Login here" : "Register here" }}</a>
       </p>
     </div>
+
   </div>
 </template>
 
 <script>
+import {useAuthStore} from '@/stores/auth';
+
 export default {
-
   data() {
-    return {
-      username: "",
-      email: "",
-      password: "",
-      recaptchaToken: "",
-      loading: false,
-      isRegistering: false
-    };
+    return {username: '', email: '', password: '', loading: false, isRegistering: false};
   },
-
 
   methods: {
-
-   async createCaptcha() {
-
-    this.loading = true;
-
-        try {
-          
-          const siteKey = import.meta.env.VITE_SITE_KEY
-          if (!window.grecaptcha || !window.grecaptcha.execute) {
-              throw new Error('reCAPTCHA not loaded');
-          }
-    
-    // Execute recaptcha
-          const token = await window.grecaptcha.execute(siteKey, {action: 'login'});
-
-        await this.submitLogin(token)
-
-        } catch (error) {
-            console.error('reCAPTCHA error:', error);
-            alert('Error verifying reCAPTCHA. Please try again.');
-          } finally {
-            this.loading = false;
-          };
-  },
-
-
     async submitLogin(token) {
-      
       if (!this.username || !this.password) {
         alert("Please fill in all fields.");
         return;
       }
 
-      const loginData = {
-        username: this.username,
-        password: this.password,
-        recaptchaToken: token
-      };
-
       try {
-         
-        const baseUrl = import.meta.env.VITE_BASE_URL
-        const response = await fetch(`${baseUrl}/api/user/login`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(loginData)
-        });
-
-        if (!response.ok) {
-          throw new Error("Invalid login credentials.");
-        }
-
-        const result = await response.json();
-
-        // Store user information
-        localStorage.setItem("currentUser", result.username);
-        localStorage.setItem("currentRole", result.role);
-        localStorage.setItem("access_token", result.access_token);
-
-        //alert("Login successful!");
-        this.$router.push("/forum"); // Redirect to Forum Page
+        const authStore = useAuthStore();
+        await authStore.login(this.username, this.password, token);
+        this.$router.push("/forum");
       } catch (error) {
         console.error("Login error:", error);
         alert("Login failed. Please check your credentials.");
       }
     },
 
-    async registerUser() {
+    async userLogin() {
+      const siteKey = import.meta.env.VITE_SITE_KEY
+
+      if (!window.grecaptcha || !window.grecaptcha.execute) {
+        console.error('reCAPTCHA not loaded');
+        alert('reCAPTCHA is not loaded. Please refresh the page.');
+        return;
+      }
+
+      try {
+        const token = await window.grecaptcha.execute(siteKey, {action: 'login'});
+        await this.submitLogin(token);
+      } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        alert('Error verifying reCAPTCHA. Please try again.');
+      }
+    },
+
+    async userRegister() {
       if (!this.username || !this.email || !this.password) {
         alert("Please fill in all fields.");
         return;
       }
 
-      const newUser = {
-        username: this.username,
-        email: this.email,
-        password: this.password
-      };
-
       try {
-        const baseUrl = import.meta.env.VITE_BASE_URL
-        const response = await fetch(`${baseUrl}/api/user/register`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(newUser)
-        });
-
-        if (!response.ok) {
-          throw new Error("Registration failed.");
-        }
-
-        console.log("Registration successful:", await response.json());
+        const authStore = useAuthStore();
+        await authStore.register(this.username, this.email, this.password);
 
         alert("Account created successfully! Please log in.");
-        this.toggleForm(); // Switch to login form after registration
+        this.toggleForm();
       } catch (error) {
         console.error("Registration error:", error);
         alert("Failed to register. Try again later.");
