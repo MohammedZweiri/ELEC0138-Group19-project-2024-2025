@@ -19,7 +19,9 @@ from marshmallow import validate
 warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name ")
 
 load_dotenv()
-reCAPTCHA_SECRET_KEY = os.getenv("SECRET_KEY")
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
+
+assert RECAPTCHA_SECRET_KEY, "Please set the RECAPTCHA_SECRET_KEY environment variable"
 
 
 def jwt_required_with_oas(*args, **kwargs):
@@ -65,7 +67,7 @@ def verify_recaptcha(token):
 
     try:
         url = "https://www.google.com/recaptcha/api/siteverify"
-        data = {"secret": reCAPTCHA_SECRET_KEY, "response": token}
+        data = {"secret": RECAPTCHA_SECRET_KEY, "response": token}
         response = requests.post(url, data=data).json()
         return response.get("success", False)
 
