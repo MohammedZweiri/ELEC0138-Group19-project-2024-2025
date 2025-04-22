@@ -9,7 +9,7 @@
           <span class="user-identifier">
             Signed in as <span class="font-medium">{{ currentUser }}</span>
           </span>
-          <button @click="logout" class="logout-button">
+          <button class="logout-button" @click="logout">
             Logout
           </button>
         </div>
@@ -26,47 +26,30 @@
           </span>
         </h2>
 
-        <div class="space-y-5">
+        <div class="thread-list">
           <article v-for="(thread, index) in threads" :key="thread.id" class="thread-card">
-
             <div class="flex items-start justify-between">
               <div>
                 <h3 class="thread-title">{{ thread.title }}</h3>
                 <div class="thread-meta">
                   <span class="inline-flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-                         stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
+                    <UserIcon/>
                     {{ thread.author }}
                   </span>
                   <span>•</span>
                   <span class="inline-flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-                         stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
+                    <CalendarIcon/>
                     {{ thread.date }}
                   </span>
                 </div>
               </div>
 
               <div v-if="!thread.protected && thread.author == currentUser" class="flex space-x-2">
-                <button @click="editThread(index)" class="edit-button">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                       stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
+                <button class="edit-button" @click="editThread(index)">
+                  <EditIcon/>
                 </button>
-                <button @click="deleteThread(index)" class="delete-button">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                       stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
+                <button class="delete-button" @click="deleteThread(index)">
+                  <DeleteIcon/>
                 </button>
               </div>
             </div>
@@ -77,11 +60,7 @@
           </article>
 
           <div v-if="threads.length === 0" class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" class="empty-state-icon"
-                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-            </svg>
+            <EmptyStateIcon/>
             <p class="empty-state-title">No threads yet</p>
             <p class="empty-state-subtitle">Be the first to start a discussion!</p>
           </div>
@@ -89,49 +68,47 @@
       </section>
 
       <!-- Create/Edit Thread Form -->
-      <section class="form-card">
-        <h2 class="form-title">
-          <span class="mr-2">{{ isEditing ? 'Edit Your Post' : 'Start a New Discussion' }}</span>
-          <span v-if="isEditing" class="edit-badge">
-            Editing
-          </span>
-        </h2>
+      <section class="form-section">
+        <div class="form-card">
+          <h2 class="form-title">
+            <span class="mr-2">{{ isEditing ? 'Edit Your Post' : 'Start a New Discussion' }}</span>
+            <span v-if="isEditing" class="edit-badge">
+              Editing
+            </span>
+          </h2>
 
-        <form @submit.prevent="submitThread" class="space-y-5">
-          <div>
-            <label for="username" class="form-label">
-              Username
-            </label>
-            <input type="text" id="username" v-model="newThread.username" :disabled="isEditing"
-                   required class="form-input">
-          </div>
+          <form class="space-y-5" @submit.prevent="submitThread">
+            <div>
+              <label class="form-label" for="username">
+                Username
+              </label>
+              <input id="username" v-model="newThread.username" :disabled="isEditing" class="form-input"
+                     readonly required type="text">
+            </div>
 
-          <div>
-            <label for="content" class="form-label"> Content </label>
-            <textarea
-                id="content"
-                v-model="newThread.content"
-                rows="8"
-                required
-                placeholder="Share your thoughts..."
-                class="form-textarea"></textarea>
-          </div>
+            <div>
+              <label class="form-label" for="content"> Content </label>
+              <textarea id="content" v-model="newThread.content" class="form-textarea"
+                        placeholder="Share your thoughts..." required rows="8">
+              </textarea>
+            </div>
 
-          <div class="flex gap-3">
-            <button
-                type="submit"
-                class="primary-button">
-              {{ isEditing ? 'Update Post' : 'Publish Post' }}
-            </button>
-            <button
-                v-if="isEditing"
-                type="button"
-                @click="cancelEdit"
-                class="secondary-button">
-              Cancel
-            </button>
-          </div>
-        </form>
+            <div class="flex gap-3">
+              <button
+                  class="primary-button"
+                  type="submit">
+                {{ isEditing ? 'Update Post' : 'Publish Post' }}
+              </button>
+              <button
+                  v-if="isEditing"
+                  class="secondary-button"
+                  type="button"
+                  @click="cancelEdit">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       </section>
     </main>
 
@@ -147,11 +124,22 @@
 import ThemeToggle from './ThemeToggle.vue';
 import {useForumStore} from '@/stores/forum';
 import {useAuthStore} from '@/stores/auth';
+import UserIcon from './icons/UserIcon.vue';
+import CalendarIcon from './icons/CalendarIcon.vue';
+import EditIcon from './icons/EditIcon.vue';
+import DeleteIcon from './icons/DeleteIcon.vue';
+import EmptyStateIcon from './icons/EmptyStateIcon.vue';
 
 export default {
   components: {
-    ThemeToggle
+    ThemeToggle,
+    UserIcon,
+    CalendarIcon,
+    EditIcon,
+    DeleteIcon,
+    EmptyStateIcon
   },
+
   data() {
     return {
       newThread: {username: '', title: '', content: ''}
@@ -261,6 +249,10 @@ export default {
   @apply container mx-auto px-4;
 }
 
+main.container-wrapper {
+  @apply flex-1 flex flex-col;
+}
+
 /* Header styles */
 .forum-header {
   @apply sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-sm border-b border-gray-200 dark:border-gray-700;
@@ -284,28 +276,37 @@ export default {
 
 /* Section titles */
 .section-title {
-  @apply text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center;
+  @apply text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center justify-center;
 }
 
 .thread-counter {
   @apply text-xs py-1 px-2 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full;
 }
 
+/* Thread List Section */
+section.mb-10 {
+  @apply flex-1 mt-8;
+}
+
+.thread-list {
+  @apply space-y-5 flex-1;
+}
+
 /* Thread cards */
 .thread-card {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-200 hover:shadow-lg border border-gray-100 dark:border-gray-700;
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-200 hover:shadow-lg border border-gray-100 dark:border-gray-700 flex flex-col;
 }
 
 .thread-title {
-  @apply text-xl font-bold text-gray-900 dark:text-white;
+  @apply text-xl font-bold text-gray-900 dark:text-white mb-2;
 }
 
 .thread-meta {
-  @apply mt-1 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400;
+  @apply mb-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400;
 }
 
 .thread-content {
-  @apply text-gray-700 dark:text-gray-300;
+  @apply text-gray-700 dark:text-gray-300 flex-1;
 }
 
 /* Edit/Delete buttons */
@@ -335,6 +336,10 @@ export default {
 }
 
 /* Form styles */
+.form-section {
+  @apply mt-8 mb-12;
+}
+
 .form-card {
   @apply bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700;
 }
