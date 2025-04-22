@@ -102,7 +102,7 @@ class PostSchema(ma.Schema):
     forum_id = ma.fields.Integer(required=True, attribute="forumID")
     username = ma.fields.String(required=True, attribute="postName", validate=validate.Length(max=20))
     time = ma.fields.DateTime(required=True, attribute="postTime", format="%Y-%m-%d %H:%M:%S")
-    text = ma.fields.String(required=True, attribute="postText", validate=validate.Length(max=200))
+    text = ma.fields.String(required=True, attribute="postText", validate=validate.Length(max=512))
 
 
 app = Flask(__name__)
