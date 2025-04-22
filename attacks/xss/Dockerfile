@@ -10,8 +10,11 @@ ENV PYTHONUNBUFFERED=1
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Initialize Playwright
+RUN playwright install --with-deps chromium
+
 # Copy application code
-COPY . .
+COPY app/ ./app/
 
 # Create a volume for database persistence
 VOLUME /app/instance

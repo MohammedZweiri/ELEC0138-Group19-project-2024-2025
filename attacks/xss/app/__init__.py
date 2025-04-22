@@ -11,7 +11,8 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
-# Import models here to avoid circular imports
+# Import models to register them with SQLAlchemy
+from .models import CollectedData, AppState
 
 
 def create_app(config=None):
