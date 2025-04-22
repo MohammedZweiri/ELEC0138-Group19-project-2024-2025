@@ -27,7 +27,14 @@
         </h2>
 
         <div class="thread-list">
-          <article v-for="(thread, index) in threads" :key="thread.id" class="thread-card">
+          <!-- Loading animation -->
+          <div v-if="isLoading" class="loading-container">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Loading...</p>
+          </div>
+
+          <article v-for="(thread, index) in threads" v-else-if="threads.length > 0" :key="thread.id"
+                   class="thread-card">
             <div class="flex items-start justify-between">
               <div>
                 <h3 class="thread-title">{{ thread.title }}</h3>
@@ -44,7 +51,7 @@
                 </div>
               </div>
 
-              <div v-if="!thread.protected && thread.author == currentUser" class="flex space-x-2">
+              <div v-if="!thread.protected && thread.author === currentUser" class="flex space-x-2">
                 <button class="edit-button" @click="editThread(index)">
                   <EditIcon/>
                 </button>
@@ -59,7 +66,7 @@
             </div>
           </article>
 
-          <div v-if="threads.length === 0" class="empty-state">
+          <div v-else class="empty-state">
             <EmptyStateIcon/>
             <p class="empty-state-title">No threads yet</p>
             <p class="empty-state-subtitle">Be the first to start a discussion!</p>
@@ -142,7 +149,8 @@ export default {
 
   data() {
     return {
-      newThread: {username: '', title: '', content: ''}
+      newThread: {username: '', title: '', content: ''},
+      isLoading: false
     };
   },
 
@@ -171,10 +179,13 @@ export default {
 
   methods: {
     async fetchPosts() {
+      this.isLoading = true;
       try {
         await this.forumStore.fetchPosts();
       } catch (error) {
         console.error('Error fetching posts:', error);
+      } finally {
+        this.isLoading = false;
       }
     },
 
@@ -323,10 +334,6 @@ section.mb-10 {
   @apply text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-700;
 }
 
-.empty-state-icon {
-  @apply h-12 w-12 mx-auto text-gray-400 dark:text-gray-600 mb-3;
-}
-
 .empty-state-title {
   @apply text-gray-600 dark:text-gray-400 text-lg font-medium;
 }
@@ -380,5 +387,29 @@ section.mb-10 {
 
 .footer-text {
   @apply text-gray-600 dark:text-gray-400 text-sm;
+}
+
+/* Loading Animation */
+.loading-container {
+  @apply flex flex-col items-center justify-center py-16;
+}
+
+.loading-spinner {
+  @apply w-12 h-12 border-4 border-gray-300 rounded-full;
+  border-top-color: theme('colors.indigo.600');
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  @apply mt-4 text-gray-600 dark:text-gray-400 text-lg font-medium;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
