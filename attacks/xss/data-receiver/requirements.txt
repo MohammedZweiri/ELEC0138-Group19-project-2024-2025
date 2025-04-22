@@ -1,0 +1,6 @@
+# Core dependencies
+Flask==3.1.0
+gunicorn==23.0.0
+
+# Database
+Flask-SQLAlchemy==3.1.1

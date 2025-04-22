@@ -1,0 +1,225 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --success-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --border-color: #dee2e6;
+    --text-color: #333;
+    --bg-color: #f8f9fa;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    margin-bottom: 30px;
+}
+
+h1 {
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.alert {
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.alert-danger {
+    background-color: rgba(231, 76, 60, 0.1);
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 0;
+    background-color: white;
+    border-radius: 4px;
+}
+
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 12px 15px;
+    text-align: left;
+}
+
+th {
+    background-color: var(--light-color);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+tr:hover {
+    background-color: rgba(52, 152, 219, 0.05);
+}
+
+.token {
+    width: auto;
+    position: relative;
+}
+
+.token-value {
+    display: block;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.user-agent {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: background-color 0.2s;
+}
+
+.copy-btn:hover {
+    background-color: #2980b9;
+}
+
+.no-data {
+    padding: 40px 20px;
+    text-align: center;
+    color: #666;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 1.1rem;
+}
+
+/* Pagination styles */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.page-info {
+    color: var(--secondary-color);
+    font-weight: 500;
+}
+
+.page-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.page-link {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.page-link:hover {
+    background-color: var(--light-color);
+    color: var(--secondary-color);
+}
+
+.page-link.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.page-link.disabled {
+    color: #999;
+    pointer-events: none;
+    background-color: #f5f5f5;
+}
+
+.ellipsis {
+    display: inline-block;
+    padding: 6px 12px;
+    color: #666;
+}
+
+footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    th, td {
+        padding: 8px 10px;
+    }
+
+    .token-value {
+        max-width: none;
+        word-break: break-all;
+    }
+
+    .pagination {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+} 
