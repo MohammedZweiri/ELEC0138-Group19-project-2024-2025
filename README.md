@@ -12,11 +12,6 @@ NotReddit hosts a forum server online for users to share their opinions and dicu
   - [Group Members](#group-member)
   - [Business Infrastructure](#business-infrastructure)
   - [Contents](#contents)
-  <!-- - [Prerequisites](#prerequisites)
-  - [Environment Setup](#environment-setup)
-    - [Backend](#backend)
-    - [Frontend](#frontend)
-    - [Database](#database) -->
   - [Features](#features)
     - [Attacks](#attacks)
     - [Mitigations](#mitigations)
@@ -33,7 +28,7 @@ NotReddit hosts a forum server online for users to share their opinions and dicu
 ## Business Infrastructure
 The business has the following structure:
 
-* There is a cloud server which hosts various sub-systems using `CloudFlareJS`
+* There is a cloud server which hosts various sub-systems using `CloudFlare`
 * The first sub-system is the website `VueJs` frontend, which includes the user and data interaction. This is operated within a docker container.
 * The second sub-system is the website `Flask` backend, which performs data processing and authentication. This is operated within a docker container.
 * The third sub-system is the `MySQL` database, which stores information regarding users and posts in the forum.
@@ -68,9 +63,9 @@ The business has the following structure:
 |:-------------------------------------:|:---------------------------------------------------------------------------------------------------:|
 | **Phishing/Domain Spoofing**          | Phishing email sent with a fake url close to the real link to trick the user to put the credentials |
 | **SSH Brute-force**                   | SSH brute force attack on the cloud server  |
-| **SQL Injection**                     | Assess the robustness of database systems against unauthorized data manipulation or access.         |
+| **SQL Injection**                     | Database data manipulation or access.         |
 | **DoS (Denial of Service)**           | Disrupt service availability via http floods.                                                       |
-| **XSS (Cross-Site Scripting)**        | Mmalicious scripts can be injected into web pages to extract jwt tokens                             |
+| **XSS (Cross-Site Scripting)**        | Malicious scripts can be injected into web pages to extract jwt tokens                             |
 
 ### Mitigations
 
@@ -78,7 +73,7 @@ The business has the following structure:
 |:-------------------------------------:|:---------------------------------------------------------------------------------------------------:|
 | **Phishing/Domain Spoofing**          | AI Neural Network model to check if the url provided in the phsihing email is fake.                 |
 | **SSH Brute-force**                   | Using fail2ban policy to ban IP addresses responsible for the attempts |
-| **SQL Injection**                     | Assess the robustness of database systems against unauthorized data manipulation or access.         |
-| **DoS (Denial of Service)**           | Showcase methods attackers use to disrupt service availability.                                     |
+| **SQL Injection**                     | Updated and cleaner flask MySQL calls        |
+| **DoS (Denial of Service)**           | Using the cloudflare's under attack protection mode                                    |
 | **XSS (Cross-Site Scripting)**        | Input Sanitization, Output Encoding and Content Security Policy (CSP)    |
 

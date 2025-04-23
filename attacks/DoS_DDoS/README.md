@@ -1,4 +1,4 @@
-DOS
+# DoS Attack
 This Python script performs a controlled, DOS attack against a specified API endpoint by maintaining a constant request rate (RPS) across multiple concurrent sessions.
 
 Features
@@ -15,7 +15,7 @@ Number of concurrent sessions to simulate (default: 500)
 Total requests per second to sustain (default: 1000)
 •	--duration
 Test duration in seconds (default: 600)
-Example
+## Process
 # Simulate 1000 RPS across 300 users for 10 minutes
 python advanced_load_test.py --url https://example.com/login \  
                              --users 300 \              
@@ -26,3 +26,11 @@ How It Works
 2.	user_worker: Coroutine that loops indefinitely, calls bucket.take() to pace itself, then performs an HTTP POST with a static JSON payload. Tracks request counts and status codes.
 3.	metrics_reporter: Every 5 seconds, calculates the delta of total requests and prints the sustained RPS, number of successful (2xx) and client-error (4xx) responses, and any exceptions caught.
 4.	run_test: Orchestrates session creation, launching users tasks plus one metrics logger, and runs for duration seconds before cancelling.
+
+## Mitigation
+
+Enabling the under attack mode in the cloudflare settings
+
+![alt text](.\images\dos_defence.jpg)
+
+More information are in https://developers.cloudflare.com/fundamentals/reference/under-attack-mode/
