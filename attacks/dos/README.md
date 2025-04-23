@@ -31,7 +31,7 @@ How It Works
 
 Enabling the under attack mode in the cloudflare settings
 
-![alt text](images\dos_defence.jpg)
+![alt text](dos_defence.jpg)
 
 
 
