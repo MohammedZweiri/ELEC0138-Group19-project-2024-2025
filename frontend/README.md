@@ -1,29 +1,26 @@
-# frontend
+# Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+This directory contains the VueJs frontend for the ELEC0138 Forum application.
 
-## Recommended IDE Setup
+## ⚙️ Installation
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Customize configuration
+2. Configure the application by add the environment variables to the `.env` file 
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+3. Run the application:
+   ```bash
+   npm run dev -- --port 80 --host
+   ```
 
-## Project Setup
 
-```sh
-npm install
-```
+## 🔐 Environment Variables
 
-### Compile and Hot-Reload for Development
+| Variable               | Description                                          | Required |
+| ---------------------- | ---------------------------------------------------- | :------: |
+| `VITE_BASE_URL` | Website's backend server  |    ❌     |
+| `VITE_SITE_KEY` | Google reCAPTCHA v3 site key for token generattion.  |    ✅     |
 
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
