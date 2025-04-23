@@ -1,12 +1,9 @@
-import datetime
-import os
 import warnings
 from copy import deepcopy
 from functools import wraps
 
 import marshmallow as ma
 import requests
-from dotenv import load_dotenv
 from flask import Flask
 from flask.views import MethodView
 from flask_cors import CORS
@@ -16,12 +13,9 @@ from flask_smorest import Api, Blueprint, abort
 from flask_smorest.error_handler import ErrorSchema
 from marshmallow import validate
 
+from config import Config
+
 warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name ")
-
-load_dotenv()
-RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
-
-assert RECAPTCHA_SECRET_KEY, "Please set the RECAPTCHA_SECRET_KEY environment variable"
 
 
 def jwt_required_with_oas(*args, **kwargs):
@@ -67,7 +61,7 @@ def verify_recaptcha(token):
 
     try:
         url = "https://www.google.com/recaptcha/api/siteverify"
-        data = {"secret": RECAPTCHA_SECRET_KEY, "response": token}
+        data = {"secret": app.config["RECAPTCHA_SECRET_KEY"], "response": token}
         response = requests.post(url, data=data).json()
         return response.get("success", False)
 
@@ -106,41 +100,7 @@ class PostSchema(ma.Schema):
 
 
 app = Flask(__name__)
-
-app.config["API_TITLE"] = "ELEC0138 Forum API"
-app.config["API_VERSION"] = "0.1.0"
-
-# flask-smorest
-app.config["OPENAPI_VERSION"] = "3.1.0"
-app.config["OPENAPI_JSON_PATH"] = "api-spec.json"
-app.config["OPENAPI_URL_PREFIX"] = "/api/docs"
-app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
-app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-app.config["API_SPEC_OPTIONS"] = {
-    "components": {
-        "securitySchemes": {
-            "Bearer Auth": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "bearerFormat": "JWT",
-                "description": "Enter: **'Bearer &lt;JWT&gt;'**, where JWT is the access token",
-            }
-        }
-    },
-}
-
-# flask-mysql
-app.config["MYSQL_HOST"] = "47.122.18.213"
-app.config["MYSQL_USER"] = "user"
-app.config["MYSQL_PASSWORD"] = "3aRtVyBN17dUbCq9"
-app.config["MYSQL_DB"] = "ELEC0138"
-app.config["MYSQL_CURSORCLASS"] = "DictCursor"
-
-# flask-jwt-extended
-app.config["JWT_SECRET_KEY"] = "super-super-secret"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(days=1)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = datetime.timedelta(days=30)
+app.config.from_object(Config)
 
 CORS(app)
 api = Api(app)
