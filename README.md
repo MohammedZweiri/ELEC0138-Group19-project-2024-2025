@@ -43,12 +43,21 @@ The business has the following structure:
 
 ## Contents
 
-The forum can be accessed live online using the https://elec0138-forum.0138019.xyz/
+* The forum can be accessed live online using the https://elec0138-forum.0138019.xyz/
 
 ![alt text](images/forum.png)
 
 
 
+* Whilst the swagger api documentation can be found in https://elec0138-api.0138019.xyz/api/docs/swagger-ui
+
+![alt text](images/api.png)
+
+
+
+
+
+* Important note: Whilst the the frontend and backend servers are live. If anyone wishes to set up their own, the guidance are in the readme files in the backend and frontend folders
 
 
 ## Features
