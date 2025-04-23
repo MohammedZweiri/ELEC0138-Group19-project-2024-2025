@@ -12,11 +12,11 @@ NotReddit hosts a forum server online for users to share their opinions and dicu
   - [Group Members](#group-member)
   - [Business Infrastructure](#business-infrastructure)
   - [Contents](#contents)
-  - [Prerequisites](#prerequisites)
+  <!-- - [Prerequisites](#prerequisites)
   - [Environment Setup](#environment-setup)
     - [Backend](#backend)
     - [Frontend](#frontend)
-    - [Database](#database)
+    - [Database](#database) -->
   - [Features](#features)
     - [Attacks](#attacks)
     - [Mitigations](#mitigations)
@@ -128,19 +128,18 @@ And then you can visit our ticket selling website through `http://localhost:5173
 
 | Attack Type                           | Description                                                                                         |
 |:-------------------------------------:|:---------------------------------------------------------------------------------------------------:|
-| **Phishing/Domain Spoofing**          | Examine vulnerabilities that could be exploited by phishing attacks to educate and build awareness. |
+| **Phishing/Domain Spoofing**          | Phishing email sent with a fake url close to the real link to trick the user to put the credentials |
 | **SSH Brute-force**                   | Simulate brute-force attacks to test the strength of password policies and authentication methods.  |
 | **SQL Injection**                     | Assess the robustness of database systems against unauthorized data manipulation or access.         |
-| **Credential Stuffing**               | Highlight the risks of reused credentials and the importance of unique password policies.           |
-| **DoS (Denial of Service)**           | Showcase methods attackers use to disrupt service availability.                                     |
-| **XSS (Cross-Site Scripting)**        | Explore how malicious scripts can be injected into web pages and compromise user interactions.      |
+| **DoS (Denial of Service)**           | Disrupt service availability via http floods.                                                       |
+| **XSS (Cross-Site Scripting)**        | Mmalicious scripts can be injected into web pages to extract jwt tokens                             |
 
 ### Mitigations
 
-| Attack Type                           | Defense                                                                                         |
+| Attack Type                           | Defense                                                                                             |
 |:-------------------------------------:|:---------------------------------------------------------------------------------------------------:|
-| **Phishing**                          | Examine vulnerabilities that could be exploited by phishing attacks to educate and build awareness. |
-| **Brute-force**                       | Simulate brute-force attacks to test the strength of password policies and authentication methods.  |
+| **Phishing/Domain Spoofing**          | AI Neural Network model to check if the url provided in the phsihing email is fake.                 |
+| **SSH Brute-force**                   | Simulate brute-force attacks to test the strength of password policies and authentication methods.  |
 | **SQL Injection**                     | Assess the robustness of database systems against unauthorized data manipulation or access.         |
 | **Credential Stuffing**               | Highlight the risks of reused credentials and the importance of unique password policies.           |
 | **DoS (Denial of Service)**           | Showcase methods attackers use to disrupt service availability.                                     |
