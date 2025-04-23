@@ -2,6 +2,8 @@
 
 This project demonstrates an automated Cross-Site Scripting (XSS) attack using Playwright to inject a payload into the forum application.
 
+![image](https://github.com/user-attachments/assets/1c41c26f-7b17-459a-93f6-c5315ea00db9)
+
 ## Usage
 
 To build and run this project using Docker, follow these steps:
@@ -10,6 +12,7 @@ To build and run this project using Docker, follow these steps:
 docker build -t xss-attack-demo .
 docker run xss-attack-demo
 ```
+Alternatively, you can explore the live demo hosted at: 🔗 https://elec0138-xss.meeska.me/
 
 ## Attack Flow
 
