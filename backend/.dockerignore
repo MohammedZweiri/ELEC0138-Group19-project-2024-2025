@@ -1,4 +1,25 @@
-# Local env files
+# Version control
+.git
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Package distribution
+dist/
+build/
+*.egg-info/
+
+# IDE and editor files
+.vscode/
+.idea/
+
+# Local configuration files
 .env
-.env.local
-.env.*.local
+*.local

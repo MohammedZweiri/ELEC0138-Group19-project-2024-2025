@@ -1,5 +1,8 @@
 FROM --platform=linux/amd64 python:3.12-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
@@ -13,13 +16,11 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY .. .
+COPY . .
 
-RUN pip install --no-cache-dir Flask gunicorn
-RUN pip install --no-cache-dir flask-cors flask-jwt-extended flask-mysqldb flask-smorest python-dotenv requests
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir gunicorn
 
 EXPOSE 8080
 
