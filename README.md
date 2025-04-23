@@ -48,78 +48,7 @@ The forum can be accessed live online using the https://elec0138-forum.0138019.x
 ![alt text](images/forum.png)
 
 
-<!-- ## Prerequisites
 
-* [Node.js 20.11.1](https://nodejs.org/en)
-* [Anaconda](https://www.anaconda.com/) / [Miniconda](https://docs.anaconda.com/free/miniconda/index.html) for python 3.8
-
-
-## Environment Setup (if desired)
-
-We offer two versions of our ticket sales website.
-
-One is the unsafe mode which may have some security risks and vulnerabilities,
-and the other is a safe mode that incorporates numerous mechanisms to safeguard the system.
-
-You can change the website's mode using different options.
-
-### Backend
-
-We are using [Flask](https://flask.palletsprojects.com/en/3.0.x/) to create our backend server.
-
-Open a new terminal and run:
-
-```bash
-$ make create-env
-# or
-$ conda env create -f environment.yml
-```
-
-Activate your conda environment:
-
-```bash
-$ conda activate security
-```
-
-To run the website:
-
-```bash
-$ cd v1/backend
-# Safe mode (default)
-$ python app.py
-# Unsafe mode
-$ MODE=unsafe python app.py
-```
-
-The backend server's URL is `http://127.0.0.1:5000`.
-
-### Frontend
-
-We are using [Vue.js](https://vuejs.org/guide/quick-start) to create our frontend website.
-
-Open a new terminal and run:
-
-```bash
-$ cd v1/frontend
-
-# Install all dependencies needed
-$ npm install
-
-# Choose your website mode
-# Safe mode (default)
-$ cat v1/frontend/.env.development
-...
-VITE_APP_MODE=safe
-# Unsafe mode
-$ cat v1/frontend/.env.development
-...
-VITE_APP_MODE=unsafe
-
-# Launch your website
-$ npm run dev
-```
-
-And then you can visit our ticket selling website through `http://localhost:5173`. -->
 
 
 ## Features
@@ -129,7 +58,7 @@ And then you can visit our ticket selling website through `http://localhost:5173
 | Attack Type                           | Description                                                                                         |
 |:-------------------------------------:|:---------------------------------------------------------------------------------------------------:|
 | **Phishing/Domain Spoofing**          | Phishing email sent with a fake url close to the real link to trick the user to put the credentials |
-| **SSH Brute-force**                   | Simulate brute-force attacks to test the strength of password policies and authentication methods.  |
+| **SSH Brute-force**                   | SSH brute force attack on the cloud server  |
 | **SQL Injection**                     | Assess the robustness of database systems against unauthorized data manipulation or access.         |
 | **DoS (Denial of Service)**           | Disrupt service availability via http floods.                                                       |
 | **XSS (Cross-Site Scripting)**        | Mmalicious scripts can be injected into web pages to extract jwt tokens                             |
@@ -139,9 +68,8 @@ And then you can visit our ticket selling website through `http://localhost:5173
 | Attack Type                           | Defense                                                                                             |
 |:-------------------------------------:|:---------------------------------------------------------------------------------------------------:|
 | **Phishing/Domain Spoofing**          | AI Neural Network model to check if the url provided in the phsihing email is fake.                 |
-| **SSH Brute-force**                   | Simulate brute-force attacks to test the strength of password policies and authentication methods.  |
+| **SSH Brute-force**                   | Using fail2ban policy to ban IP addresses responsible for the attempts |
 | **SQL Injection**                     | Assess the robustness of database systems against unauthorized data manipulation or access.         |
-| **Credential Stuffing**               | Highlight the risks of reused credentials and the importance of unique password policies.           |
 | **DoS (Denial of Service)**           | Showcase methods attackers use to disrupt service availability.                                     |
-| **XSS (Cross-Site Scripting)**        | Explore how malicious scripts can be injected into web pages and compromise user interactions.      |
+| **XSS (Cross-Site Scripting)**        | Input Sanitization, Output Encoding and Content Security Policy (CSP)    |
 
