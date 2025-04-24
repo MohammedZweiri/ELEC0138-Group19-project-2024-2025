@@ -11,9 +11,9 @@ def parse_args():
     p.add_argument('--url',
                    default="https://elec0138-forum.0138019.xyz/",
                    help="Heavier endpoint to hit")
-    p.add_argument('--users',    type=int,   default=500,
+    p.add_argument('--users',    type=int,   default=3500,
                    help="Concurrent “sessions”")
-    p.add_argument('--rps',      type=int,   default=1000,
+    p.add_argument('--rps',      type=int,   default=3500,
                    help="Total requests per second to sustain")
     p.add_argument('--duration', type=int,   default=600,
                    help="Test duration (s)")
