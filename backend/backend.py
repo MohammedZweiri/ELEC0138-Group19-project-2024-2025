@@ -4,6 +4,8 @@ from functools import wraps
 
 import marshmallow as ma
 import requests
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from flask import Flask
 from flask.views import MethodView
 from flask_cors import CORS
@@ -16,6 +18,8 @@ from marshmallow import validate
 from config import Config
 
 warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name ")
+
+ph = PasswordHasher()
 
 
 def jwt_required_with_oas(*args, **kwargs):
@@ -120,6 +124,9 @@ class Users(MethodView):
         """Create a new user"""
         email, name, password = args["email"], args["username"], args["password"]
 
+        # Hash the password using Argon2
+        hashed_password = ph.hash(password)
+
         with mysql.connection.cursor() as cursor:
             # Check if user's email already exists
             cursor.execute("SELECT 1 FROM Users WHERE email = %s", (email,))
@@ -134,7 +141,7 @@ class Users(MethodView):
             # Insert the new user
             cursor.execute(
                 "INSERT INTO Users (email, password, username) VALUES (%s, %s, %s)",
-                (email, password, name),
+                (email, hashed_password, name),
             )
             mysql.connection.commit()
 
@@ -162,8 +169,16 @@ class UsersLogin(MethodView):
             if not (user := cursor.fetchone()):
                 abort(404, message="User not found")
 
-            if user["password"] != password:
+            try:
+                ph.verify(user["password"], password)
+            except VerifyMismatchError:
                 abort(401, message="Incorrect password")
+
+            # Rehash the password if needed
+            if ph.check_needs_rehash(user["password"]):
+                new_hash = ph.hash(password)
+                cursor.execute("UPDATE Users SET password = %s WHERE username = %s", (new_hash, username))
+                mysql.connection.commit()
 
         # Create access token and refresh token
         user["access_token"] = create_access_token(identity=user["username"])
