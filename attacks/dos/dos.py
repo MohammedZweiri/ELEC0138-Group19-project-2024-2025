@@ -9,7 +9,7 @@ import aiohttp
 def parse_args():
     p = argparse.ArgumentParser(description="Steady‑state crash tester")
     p.add_argument('--url',
-                   default="https://elec0138-api.0138019.xyz/api/user/login",
+                   default="https://elec0138-forum.0138019.xyz/",
                    help="Heavier endpoint to hit")
     p.add_argument('--users',    type=int,   default=500,
                    help="Concurrent “sessions”")
