@@ -1,13 +1,20 @@
 # Phishing Attack
 ## Process
-1. Send a phishing email to all victims in victim_list.csv 
-  - This requires a gmail account and corresponding app password within thr sender.json file, communicate with Mohammed Zweiri for credentials collections 
+1. Create a virtual environment
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Send a phishing email to all victims in victim_list.csv 
+  - This requires a gmail account and corresponding app password within the sender.json file, communicate with Mohammed Zweiri for credentials collections 
 uceemzw@ucl.ac.uk
+
 ```
 cd attacks/phishing
 python send_email.py
 ```
-2. The user will recieve an email with a fake url close to the real one https://eiec0138-forum.0138019.xyz/, asking them to login to resolve some issues.
+4. The user will recieve an email with a fake url close to the real one https://eiec0138-forum.0138019.xyz/, asking them to login to resolve some issues.
     - The live phishy website is https://eiec0138-forum.0138019.xyz/ , which is has been done via opening a terminal and run
     ```
     cd attacks/phishing/phishing_website/frontend
@@ -21,7 +28,7 @@ python send_email.py
     ```
 
 
-3. If the user attempts to login, it will send a login request to phishing backend api.
+5. If the user attempts to login, it will send a login request to phishing backend api.
     - Nothing will happen, however, the user's credential will be stored under a victim_info.txt file under attacks/phishing/backend. 
     - Saved usernames and passwords can be tried to login in the real website later.
 

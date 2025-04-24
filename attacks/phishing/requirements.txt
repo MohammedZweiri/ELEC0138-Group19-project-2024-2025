@@ -1,0 +1,7 @@
+# Libraries
+numpy
+pandas
+scikit-learn
+matplotlib
+pickle
+seaborn
