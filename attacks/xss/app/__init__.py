@@ -1,7 +1,3 @@
-"""
-Flask application for collecting and displaying data.
-This module initializes the Flask application and registers blueprints.
-"""
 import logging
 
 from flask import Flask
@@ -11,20 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
-# Import models to register them with SQLAlchemy
-from .models import CollectedData, AppState
-
-
 def create_app(config=None):
-    """
-    Application factory function that creates and configures the Flask app.
-    
-    Args:
-        config: Configuration object or string path to configuration file
-        
-    Returns:
-        A configured Flask application instance
-    """
     app = Flask(__name__)
 
     # Load configuration
@@ -43,6 +26,7 @@ def create_app(config=None):
     db.init_app(app)
 
     # Create database tables
+    from .models import CollectedData, AppState
     with app.app_context():
         db.create_all()
 

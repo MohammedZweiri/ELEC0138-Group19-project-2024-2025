@@ -23,4 +23,4 @@ VOLUME /app/instance
 EXPOSE 5000
 
 # Run with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:create_app()"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]

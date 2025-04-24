@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>XSS Data Collection - Results</title>
+    <title>ELEC0138 XSS Attack Demo</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
         .attack-controls {
@@ -39,12 +39,12 @@
             border-radius: 4px;
             font-weight: bold;
         }
-        
+
         .status-active {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
+
         .status-inactive {
             background-color: #d4edda;
             color: #155724;
@@ -58,9 +58,11 @@
         {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
-        
-        <div id="attack-status" class="attack-status {% if attack_state == 'active' %}status-active{% else %}status-inactive{% endif %}">
-            Attack Status: <span id="status-text">{% if attack_state == 'active' %}ACTIVE{% else %}INACTIVE{% endif %}</span>
+
+        <div id="attack-status"
+             class="attack-status {% if attack_state == 'active' %}status-active{% else %}status-inactive{% endif %}">
+            Attack Status: <span
+                id="status-text">{% if attack_state == 'active' %}ACTIVE{% else %}INACTIVE{% endif %}</span>
         </div>
 
         <div class="attack-controls">
