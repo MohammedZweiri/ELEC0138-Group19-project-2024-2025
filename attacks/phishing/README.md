@@ -1,7 +1,8 @@
 # Phishing Attack
 ## Process
-1. Send a phishing email to all victims in victim_list.csv (requires a gmail account and corresponding app password, communicate with Mohammed Zweiri for credentials collections 
-uceemzw@ucl.ac.uk)
+1. Send a phishing email to all victims in victim_list.csv 
+  - This requires a gmail account and corresponding app password within thr sender.json file, communicate with Mohammed Zweiri for credentials collections 
+uceemzw@ucl.ac.uk
 ```
 cd attacks/phishing
 python send_email.py
@@ -11,16 +12,16 @@ python send_email.py
     ```
     cd attacks/phishing/phishing_website/frontend
     npm install
-    npm run dev
+    npm run dev -- --port 80 --host
     ```
-    For the frontend and open another terminal and run
+    For the backend system, open another terminal and run
     ```
     cd attacks/phishing/phishing_website/backend
-    python app.py
+    python backend.py
     ```
-    for the backend.
 
-3. If the user attempts to login, it will send a login request to phishing backend. 
+
+3. If the user attempts to login, it will send a login request to phishing backend api.
     - Nothing will happen, however, the user's credential will be stored under a victim_info.txt file under attacks/phishing/backend. 
     - Saved usernames and passwords can be tried to login in the real website later.
 
@@ -45,3 +46,10 @@ python training.py
 cd attacks/phishing
 python phishing_detection.py
 ```
+
+## 🔐 sender.json keys
+
+| Variable               | Description                                          | Required |
+| ---------------------- | ---------------------------------------------------- | :------: |
+| `email` | SMTP sender emai  |    ✅      |
+| `password` | GMAIL app password  |    ✅     |
