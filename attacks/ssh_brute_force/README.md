@@ -17,3 +17,5 @@ sudo systemctl enable fail2ban.service
 sudo fail2ban-client status
 sudo fail2ban-client status sshd
 ```
+
+![alt text](image.png)

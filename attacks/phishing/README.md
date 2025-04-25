@@ -58,5 +58,5 @@ python phishing_detection.py
 
 | Variable               | Description                                          | Required |
 | ---------------------- | ---------------------------------------------------- | :------: |
-| `email` | SMTP sender emai  |    ✅      |
+| `email` | SMTP sender email  |    ✅      |
 | `password` | GMAIL app password  |    ✅     |
